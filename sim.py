@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
-from physics import *
-from dataManagement import *
-from controlMath import *
-from motors import *
+from simulation.physics import *
+from simulation.dataManagement import *
+from simulation.controlMath import *
+from simulation.motors import *
 
 import flightCode
 

@@ -1,21 +1,24 @@
+# simulation libraries
 from simulation.physics import *
 from simulation.dataManagement import *
-from simulation.controlMath import *
 from simulation.motors import *
-import simulation.sim as sim
+
+# user libraries
+
+from libs.controlMath import *
 
 import math
 import random
 
 
-def setup() -> None:
+def setup() -> bool:
     # put your setup code here, to run once:
 
-    pass
+    return True
 
 
-def loop() -> sim.control_data:
+def loop() -> control_data:
     # put your main code here, to run repeatedly:
 
     # must pass control data to the simulation
-    return sim.control_data()
+    return control_data()

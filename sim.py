@@ -2,32 +2,13 @@ from dataclasses import dataclass
 
 from simulation.physics import *
 from simulation.dataManagement import *
-from simulation.controlMath import *
 from simulation.motors import *
+from simulation.sensors import *
 
 import flightCode
 
-
-@dataclass
-class control_data:
-
-    """Class storing all the control outputs of the rocket
-
-    Params:
-
-    tvc_position - a vector represenging the position of the rocket's thrust vector control mount in radians
-
-    reaction_wheel_output - a torque in newton-meters representing the torque from a reaction wheel
-
-    motor_fire - the name of the motor you want to fire, leave blank to not fire any motor
-    """
-
-    tvc_position: vector3 = vector3()
-    reaction_wheel_output: float = 0.0
-
-    motor_fire: str = ""
-
 dataIn: control_data = control_data()
+
 
 class rocketBody:
 
@@ -53,7 +34,7 @@ class rocketBody:
 
         self.rocket_motor: rocketMotor = rocketMotor(0)
 
-        self.tvc : TVC = TVC()
+        self.tvc: TVC = TVC()
 
 
 rocket: rocketBody = rocketBody()
@@ -62,7 +43,7 @@ rocket: rocketBody = rocketBody()
 
 settingsLoader = settingsParser()
 
-settingsLoader.load_settings("../settings.yaml")
+settingsLoader.load_settings("settings.yaml")
 
 simulation_time: float = settingsLoader.simulation_time
 simulation_time_step: float = settingsLoader.time_step
@@ -103,8 +84,9 @@ def getTimeMicroseconds() -> float:
 
 # simulation
 
-
-flightCode.setup()
+# run startup code
+if not flightCode.setup():
+    raise ImportError
 
 while True:
 

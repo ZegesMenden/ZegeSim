@@ -1,10 +1,10 @@
 settings:
   
-  timeStep: 1000.0
-  simTime: 60.0
+  timeStep: 100.0
+  simTime: 25.0
 
   motors: {
-    "ascent": "d12",
+    "ascent": "e12",
   }
 
   max_motor_ignition_delay: 0.78
@@ -16,18 +16,19 @@ settings:
 
   rocket_mass: 0.81
 
-  mmoi: [0.0, 0.0, 0.0]
+  mmoi: [0.0102, 0.0548202733120976, 0.0548202733120976]
 
-  cp_location: [0.0, 0.0, 0.0]
+  cp_location: [-0.4, 0.0, 0.0]
+  tvc_location: [0.4, 0.0, 0.0]
   
-  drag_area: 0.0
-  drag_coeff: 0.0
+  drag_area: 0.6
+  drag_coeff: 0.2
 
-  wind_speed: [0.0, 0.0, 0.0]
+  wind_speed: [0.0, 0.2, 0.1]
 
   # y and z
-  max_tvc_angle: [0.0, 0.0]
-  tvc_noise: 0.0
+  max_tvc_angle: [5.0, 5.0]
+  tvc_noise: 0.0025
 
   tvc_servo_speed: 250
   tvc_linkage_ratio: 4

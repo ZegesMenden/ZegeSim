@@ -1,102 +1,79 @@
 from dataclasses import dataclass
 
+import os
+
 from simulation.physics import *
 from simulation.dataManagement import *
 from simulation.motors import *
 from simulation.sensors import *
+from simulation.body import *
 
-import flightCode
+from flightCode import setup, loop
 
 dataIn: control_data = control_data()
-
-
-class rocketBody:
-
-    """Class representing a rocket"""
-
-    def __init__(self) -> None:
-        """initializes the rocket interface"""
-
-        self.body: physicsBody = physicsBody()
-
-        self.time: float = 0.0
-
-        self.IMU: IMU6DOF = IMU6DOF()
-        self.barometer: barometer = barometer()
-        self.gps: GPS = GPS()
-
-        self.tvc_position: vector3 = vector3()
-        self.reaction_wheel_torque: float = 0.0
-
-        self.pyro1: bool = False
-        self.pyro2: bool = False
-        self.pyro3: bool = False
-
-        self.rocket_motor: rocketMotor = rocketMotor(0)
-
-        self.tvc: TVC = TVC()
-
 
 rocket: rocketBody = rocketBody()
 
 # load settings
 
 settingsLoader = settingsParser()
-
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 settingsLoader.load_settings("settings.yaml")
 
 simulation_time: float = settingsLoader.simulation_time
 simulation_time_step: float = settingsLoader.time_step
+dt : float = 1 / simulation_time_step
+rocket.time_step = dt
 rocket.rocket_motor.timeStep = settingsLoader.time_step
 
 rocket.body.dryMass = settingsLoader.mass
 rocket.body.moment_of_inertia = settingsLoader.mmoi
+rocket.body.gravity = vector3(-9.8, 0.0, 0.0)
 
 rocket.body.drag_area = settingsLoader.drag_area
 rocket.body.drag_coefficient = settingsLoader.drag_coeff
 rocket.body.wind_speed = settingsLoader.wind_speed
 
-rocket.IMU.sampleRateAccel = settingsLoader.imu_accel_read_speed
-rocket.IMU.sampleRateGyro = settingsLoader.imu_gyro_read_speed
+rocket.IMU.sampleRateAccel = 1 / settingsLoader.imu_accel_read_speed
+rocket.IMU.sampleRateGyro = 1 / settingsLoader.imu_gyro_read_speed
 
-rocket.barometer.readDelay = settingsLoader.baro_read_speed
+rocket.barometer.readDelay = 1 / settingsLoader.baro_read_speed
 rocket.rocket_motor.maxIgnitionDelay = settingsLoader.max_ignition_delay
 
-rocket.tvc
+rocket.tvc.linkageRatio = settingsLoader.linkage_ratio
+rocket.tvc.max = settingsLoader.max_tvc
+rocket.tvc_location = settingsLoader.tvc_location
+rocket.body.cp_location = settingsLoader.cp_location
+
+rocket.IMU.gyroNoise = vector3(0.5, 0.5, 0.5) * DEG_TO_RAD
+rocket.IMU.accelNoise = vector3(0.1, 0.1, 0.1)
+
+rocket.IMU.accelScale = 9.8 * 8
+rocket.IMU.gyroScale = 2000 * DEG_TO_RAD
 
 for motor in settingsLoader.motors:
-    print(motor[0], motor[1])
+    # print(motor[0], motor[1])
     rocket.rocket_motor.add_motor(motor[1], motor[0])
 
 rocket.body.mass = rocket.body.dryMass + rocket.rocket_motor.totalMotorMass
 
-
-def getTimeSeconds() -> float:
-    return simulation_time
-
-
-def getTimeMilliseconds() -> float:
-    return simulation_time * 1000
-
-
-def getTimeMicroseconds() -> float:
-    return simulation_time * 1000000
-
 # simulation
 
 # run startup code
-if not flightCode.setup():
-    raise ImportError
+setup(rocket)
 
 while True:
 
-    simulation_time += simulation_time_step
+    rocket.time += dt
 
-    dataIn = flightCode.loop()
+    rocket.update()
 
-    rocket.rocket_motor.ignite(dataIn.motor_fire, simulation_time)
+    dataIn = loop(rocket)
 
-    rocket.body.update(simulation_time_step)
+    rocket.body.clear()
+
+    rocket.rocket_motor.ignite(dataIn.motor_fire, rocket.time)
+    rocket.tvc_position = dataIn.tvc_position    
 
     if rocket.time > simulation_time:
         break

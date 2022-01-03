@@ -378,11 +378,8 @@ class rocketMotor:
     def ignite(self, motor, time):
         if str(motor) in self.motorNames:
             if self.isLit[str(motor)] == False:
-                if motor == "ascent":
-                    self.ignitionTimes[str(motor)] = time * self.timeStep
-                else:
-                    self.ignitionTimes[str(motor)] = (
-                        time + self.ignitionDelays[str(motor)]) * self.timeStep
+                self.ignitionTimes[str(motor)] = (
+                    time + self.ignitionDelays[str(motor)]) * self.timeStep
                 self.isLit[str(motor)] = True
 
     def update(self, time):

@@ -17,8 +17,13 @@ def rotate(x, y, theta) -> vector3:
 
 
 def calculateAngleFromDesiredTorque(moment_arm, force, mmoi, desired_torque):
-    calcval = desired_torque * mmoi / force / moment_arm
-    return math.asin(calcval)
+    if force != 0.0:
+        calcval = desired_torque * mmoi / force / moment_arm
+        if abs(calcval) > 1.0:
+            return 0.0 
+        return math.asin(calcval)
+    else:
+        return 0.0
 
 
 def positive_or_negative():

@@ -66,27 +66,24 @@ class IMU6DOF:
 
             self.lastReadAccel = time
 
-            self.accel.x = np.random.normal(
-                trueAccelerations.x, self.accelNoise.x, 1)[0]
-            self.accel.y = np.random.normal(
-                trueAccelerations.y, self.accelNoise.y, 1)[0]
-            self.accel.z = np.random.normal(
-                trueAccelerations.z, self.accelNoise.z, 1)[0]
+            self.accel.x = trueAccelerations.x + np.random.normal(0, self.accelNoise.x, 1)[0]
+            self.accel.y = trueAccelerations.y + np.random.normal(0, self.accelNoise.y, 1)[0]
+            self.accel.z = trueAccelerations.z + np.random.normal(0, self.accelNoise.z, 1)[0]
 
             self.accel += self.accelBias
 
-            if self.accel.x > self.accelScale.x:
-                self.accel.x = self.accelScale.x
-            if self.accel.x < -self.accelScale.x:
-                self.accel.x = -self.accelScale.x
-            if self.accel.y > self.accelScale.y:
-                self.accel.y = self.accelScale.y
-            if self.accel.y < -self.accelScale.y:
-                self.accel.y = -self.accelScale.y
-            if self.accel.z > self.accelScale.z:
-                self.accel.z = self.accelScale.z
-            if self.accel.z < -self.accelScale.z:
-                self.accel.z = -self.accelScale.z
+            if self.accel.x > self.accelScale:
+                self.accel.x = self.accelScale
+            if self.accel.x < -self.accelScale:
+                self.accel.x = -self.accelScale
+            if self.accel.y > self.accelScale:
+                self.accel.y = self.accelScale
+            if self.accel.y < -self.accelScale:
+                self.accel.y = -self.accelScale
+            if self.accel.z > self.accelScale:
+                self.accel.z = self.accelScale
+            if self.accel.z < -self.accelScale:
+                self.accel.z = -self.accelScale
 
     def readGyro(self, trueOriRates, time) -> None:
 
@@ -94,29 +91,26 @@ class IMU6DOF:
 
             self.lastReadGyro = time
 
-            self.oriRates.x = trueOriRates.x + \
-                np.random.normal(0, self.gyroNoise.x, 1)[0] * DEG_TO_RAD
-            self.oriRates.y = trueOriRates.y + \
-                np.random.normal(0, self.gyroNoise.y, 1)[0] * DEG_TO_RAD
-            self.oriRates.z = trueOriRates.z + \
-                np.random.normal(0, self.gyroNoise.z, 1)[0] * DEG_TO_RAD
+            self.oriRates.x = trueOriRates.x + np.random.normal(0, self.gyroNoise.x, 1)[0] * DEG_TO_RAD
+            self.oriRates.y = trueOriRates.y + np.random.normal(0, self.gyroNoise.y, 1)[0] * DEG_TO_RAD
+            self.oriRates.z = trueOriRates.z + np.random.normal(0, self.gyroNoise.z, 1)[0] * DEG_TO_RAD
 
             self.oriRates += self.gyroBias
 
-            if self.oriRates.x > self.gyroScale.x:
-                self.oriRates.x = self.gyroScale.x
-            if self.oriRates.x < -self.gyroScale.x:
-                self.oriRates.x = -self.gyroScale.x
+            if self.oriRates.x > self.gyroScale:
+                self.oriRates.x = self.gyroScale
+            if self.oriRates.x < -self.gyroScale:
+                self.oriRates.x = -self.gyroScale
 
-            if self.oriRates.y > self.gyroScale.y:
-                self.oriRates.y = self.gyroScale.y
-            if self.oriRates.y < -self.gyroScale.y:
-                self.oriRates.y = -self.gyroScale.y
+            if self.oriRates.y > self.gyroScale:
+                self.oriRates.y = self.gyroScale
+            if self.oriRates.y < -self.gyroScale:
+                self.oriRates.y = -self.gyroScale
 
-            if self.oriRates.z > self.gyroScale.z:
-                self.oriRates.z = self.gyroScale.z
-            if self.oriRates.z < -self.gyroScale.z:
-                self.oriRates.z = -self.gyroScale.z
+            if self.oriRates.z > self.gyroScale:
+                self.oriRates.z = self.gyroScale
+            if self.oriRates.z < -self.gyroScale:
+                self.oriRates.z = -self.gyroScale
 
 
 class GPS:
@@ -132,8 +126,7 @@ class GPS:
 
     def update(self, position, velocity, dt, time) -> None:
 
-        self.accuracy += random.randint(0, 100) / \
-            1000.0 * random.choice([-1, 1])
+        self.accuracy += random.randint(0, 100) / 1000.0 * random.choice([-1, 1])
 
         if self.accuracy < 0.1:
             self.accuracy = 0.1

@@ -425,7 +425,8 @@ class TVC:
 
     def actuate(self, command_angles: vector3, dt):
 
-        self.command = command_angles * RAD_TO_DEG * self.linkageRatio
+        self.command.y = command_angles.y * RAD_TO_DEG * self.linkageRatio
+        self.command.z = command_angles.z * RAD_TO_DEG * self.linkageRatio
 
         errorY = self.command.y - self.Servoposition.y
         errorZ = self.command.z - self.Servoposition.z
@@ -439,9 +440,9 @@ class TVC:
         self.Servoposition.y += errorY
         self.Servoposition.z += errorZ
 
-        self.position.y = (round(self.Servoposition.y, 0) / self.linkageRatio.y +
+        self.position.y = (round(self.Servoposition.y, 0) / self.linkageRatio +
                            random.randint(-100, 100) / 100 * self.noise.y) * DEG_TO_RAD
-        self.position.z = (round(self.Servoposition.z, 0) / self.linkageRatio.z +
+        self.position.z = (round(self.Servoposition.z, 0) / self.linkageRatio +
                            random.randint(-100, 100) / 100 * self.noise.z) * DEG_TO_RAD
 
         self.position.y += self.offset.y
@@ -528,8 +529,9 @@ class physicsBody:
 
         if isinstance(force, vector3):
 
-            self.acceleration_inertial += force / self.mass
-
+            accel = force / self.mass
+            self.acceleration_inertial += accel
+            self.acceleration_local += self.rotation_quaternion.conj().rotateVector(accel)
         else:
 
             raise TypeError
@@ -590,6 +592,7 @@ class physicsBody:
 
             self.addTorque(torque)
             self.acceleration_inertial += accel
+            self.acceleration_local += self.rotation_quaternion.conj().rotateVector(accel)
 
         else:
             raise TypeError
@@ -651,13 +654,13 @@ class physicsBody:
 
         # position velocity and acceleration
 
-        self.acceleration_local = self.rotation_quaternion.conj(
-        ).rotateVector(self.acceleration_inertial)
+        # self.acceleration_local = self.rotation_quaternion.conj(
+        # ).rotateVector(self.acceleration_inertial)
 
         self.acceleration_inertial += self.gravity
 
-        self.position += self.velocity * dt
         self.velocity += self.acceleration_inertial * dt
+        self.position += self.velocity * dt
 
         if self.position.x <= 0 and self.floor == True:
             self.velocity = vector3()

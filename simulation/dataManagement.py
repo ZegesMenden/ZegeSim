@@ -230,6 +230,9 @@ class settingsParser:
 
         self.max_tvc: vector3 = vector3()
 
+        self.tvc_location : vector3 = vector3()
+        self.cp_location : vector3 = vector3()
+
         pass
 
     def load_settings(self, file_name: str):
@@ -267,6 +270,11 @@ class settingsParser:
         self.mmoi = vector3(float(config["mmoi"][0]), float(
             config["mmoi"][1]), float(config["mmoi"][2]))
 
+        self.tvc_location = vector3(float(config["tvc_location"][0]), float(
+            config["tvc_location"][1]), float(config["tvc_location"][2]))
+        
+        self.cp_location = vector3(float(config["cp_location"][0]), float(
+            config["cp_location"][1]), float(config["cp_location"][2]))
         # print(self.motors)
         # print(self.time_step)
         # print(self.simulation_time)

@@ -45,7 +45,8 @@ class rocketBody:
         self.tvc.calculateForces(self.rocket_motor.currentThrust)
         self.body.applyLocalForce(self.tvc.force, self.tvc_location)
 
-        # self.body.update_aerodynamics()
+        self.body.update_aerodynamics()
+        self.body.applyForce(self.body.drag_force, self.body.cp_location)
         self.body.update(self.time_step)
 
     def clear(self):

@@ -419,39 +419,39 @@ class TVC:
 
         self.servoSpeed = 0.0
 
-        self.linkageRatio = vector3()
+        self.linkageRatio = 0.0
 
         self.force = vector3(0.0, 0.0, 0.0)
 
     def actuate(self, command_angles: vector3, dt):
 
-        self.command.y = command_angles.y * RAD_TO_DEG * self.linkageRatio
-        self.command.z = command_angles.z * RAD_TO_DEG * self.linkageRatio
+        self.command.y = command_angles.y * RAD_TO_DEG * 4.0
+        self.command.z = command_angles.z * RAD_TO_DEG * 4.0
 
         errorY = self.command.y - self.Servoposition.y
         errorZ = self.command.z - self.Servoposition.z
 
-        speedY = self.servoSpeed * dt
-        speedZ = self.servoSpeed * dt
+        speedY = 250 * dt
+        speedZ = 250 * dt
 
-        errorY = clamp(errorY, -speedY, speedY)
-        errorZ = clamp(errorZ, -speedZ, speedZ)
+        # errorY = clamp(errorY, -speedY, speedY)
+        # errorZ = clamp(errorZ, -speedZ, speedZ)
 
         self.Servoposition.y += errorY
         self.Servoposition.z += errorZ
 
-        self.position.y = (round(self.Servoposition.y, 0) / self.linkageRatio +
+        self.position.y = (round(self.Servoposition.y, 5) / 4.0 +
                            random.randint(-100, 100) / 100 * self.noise.y) * DEG_TO_RAD
-        self.position.z = (round(self.Servoposition.z, 0) / self.linkageRatio +
+        self.position.z = (round(self.Servoposition.z, 5) / 4.0 +
                            random.randint(-100, 100) / 100 * self.noise.z) * DEG_TO_RAD
 
         self.position.y += self.offset.y
         self.position.z += self.offset.z
 
         self.position.y = clamp(
-            self.position.y, self.min.y * DEG_TO_RAD, self.max.y * DEG_TO_RAD)
+            self.position.y, -5 * DEG_TO_RAD, 5 * DEG_TO_RAD)
         self.position.z = clamp(
-            self.position.z, self.min.z * DEG_TO_RAD, self.max.z * DEG_TO_RAD)
+            self.position.z, -5 * DEG_TO_RAD, 5 * DEG_TO_RAD)
 
     def calculateForces(self, thrust):
 
@@ -629,10 +629,10 @@ class physicsBody:
             dc = self.drag_coefficient * self.aoa
 
             if self.floor == True and self.position.x != 0.0:
-                self.dragForce = -velRelative.normalize() * 0.5 * 1.225 * \
+                self.drag_force = -velRelative.normalize() * 0.5 * 1.225 * \
                     (self.velocity.norm() ** 2) * dc * self.drag_area
             elif self.floor == False:
-                self.dragForce = -velRelative.normalize() * 0.5 * 1.225 * \
+                self.drag_force = -velRelative.normalize() * 0.5 * 1.225 * \
                     (self.velocity.norm() ** 2) * dc * self.drag_area
 
     def update(self, dt):

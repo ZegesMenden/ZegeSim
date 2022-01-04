@@ -30,8 +30,8 @@ NAV.posKF_z.R = 0.15
 global setpoint
 setpoint: vector3 = vector3()
 
-FSF_pitch: FSF = FSF(10.0, 6.53254619)
-FSF_yaw: FSF = FSF(10.0, 6.53254619)
+FSF_pitch: FSF = FSF(3.16227766, 1.97902394)
+FSF_yaw: FSF = FSF(3.16227766, 1.97902394)
 
 tvc_command: vector3 = vector3()
 
@@ -250,6 +250,8 @@ def read_gps(rocket: rocketBody) -> None:
 
 def TVC_update(rocket: rocketBody) -> None:
 
+    FSF_pitch.setpoint = 5 * DEG_TO_RAD
+
     FSF_pitch.compute(NAV.orientation_euler.y, NAV.oriRates.y)
     FSF_yaw.compute(NAV.orientation_euler.z, NAV.oriRates.z)
 
@@ -262,8 +264,8 @@ def TVC_update(rocket: rocketBody) -> None:
     tvcy = TVC_y * cr - TVC_z * sr
     tvcz = TVC_y * sr + TVC_z * cr
 
-    # return vector3(0.0, tvcy, tvcz)
-    return vector3(0.0, TVC_y, TVC_z)
+    return vector3(0.0, tvcy, tvcz)
+    # return vector3(0.0, TVC_y, TVC_z)
 
 
 def setup(rocket: rocketBody) -> None:

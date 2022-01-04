@@ -7,6 +7,7 @@ from simulation.dataManagement import *
 from simulation.motors import *
 from simulation.sensors import *
 from simulation.body import *
+from simulation.plotter import *
 
 from flightCode import setup, loop
 
@@ -42,6 +43,7 @@ rocket.rocket_motor.maxIgnitionDelay = settingsLoader.max_ignition_delay
 
 rocket.tvc.linkageRatio = settingsLoader.linkage_ratio
 rocket.tvc.max = settingsLoader.max_tvc
+rocket.tvc.min = settingsLoader.max_tvc * -1
 rocket.tvc_location = settingsLoader.tvc_location
 rocket.body.cp_location = settingsLoader.cp_location
 
@@ -77,3 +79,10 @@ while True:
 
     if rocket.time > simulation_time:
         break
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+p : plotter = plotter()
+
+p.read_header("data_out.csv")
+p.create_2d_graph(['time', 'ori_x', 'ori_y', 'ori_z', 'ori_x_sensed', 'ori_y_sensed', 'ori_z_sensed'], "time", "various readings (deg)", True)
+p.show_all_graphs()

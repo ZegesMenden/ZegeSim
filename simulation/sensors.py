@@ -61,7 +61,6 @@ class IMU6DOF:
         self.lastReadGyro = 0.0
 
     def readAccel(self, trueAccelerations, time) -> None:
-
         if time > self.lastReadAccel + self.sampleRateAccel:
 
             self.lastReadAccel = time

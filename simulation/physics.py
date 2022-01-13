@@ -1,332 +1,359 @@
-from __future__ import annotations
 from dataclasses import dataclass
-import math
-import random
+import numpy as np
 
-DEG_TO_RAD = math.pi / 180.0
-RAD_TO_DEG = 180 / math.pi
-
-
-def clamp(n, minn, maxn):  # Clamps output to a range
-    return max(min(maxn, n), minn)
-
-
+@dataclass
 class vector3:
 
-    def __init__(self, x=0.0, y=0.0, z=0.0) -> None:
-        """Class representing a 3D vector"""
+    """Data class representing a 3-dimensional vector."""
+
+    x : float = 0.0
+    y : float = 0.0
+    z : float = 0.0    
+
+    def __init__(self, x : float = 0.0, y : float = 0.0, z : float = 0.0):
+        
+        """Initialize a vector3 object.
+        
+        parameters:
+
+        x : float
+            x-coordinate of the vector
+
+        y : float
+            y-coordinate of the vector
+
+        z : float
+            z-coordinate of the vector
+        """
 
         self.x = x
         self.y = y
         self.z = z
 
-    def __str__(self) -> str:
-        """Returns the vector as a string"""
-        return str(self.x) + ', ' + str(self.y) + ', ' + str(self.z)
+        pass
 
-    def __neg__(self) -> vector3:
-        """Returns the negative vector"""
+    def __str__(self):
+        
+        """Return a string representation of the vector."""
+
+        return f"{self.x}, {self.y}, {self.z}"
+
+    def __repr__(self):
+
+        """Return a complex string representation of the vector."""
+
+        return f"vector3({self.x}, {self.y}, {self.z})"
+
+    def __add__(self, other : vector3):
+
+        """Add two vectors."""
+
+        if isinstance(other, vector3):
+            return vector3(self.x + other.x, self.y + other.y, self.z + other.z)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other : vector3):
+
+        """Subtract two vectors."""
+
+        if isinstance(other, vector3):
+            return vector3(self.x - other.x, self.y - other.y, self.z - other.z)
+        else:
+            return NotImplemented
+    
+    def __mul__(self, other : float):
+
+        """Multiply a vector by a scalar."""
+
+        if isinstance(other, float):
+            return vector3(self.x * other, self.y * other, self.z * other)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other : vector3):
+
+        """Multiply two vectors."""
+
+        if isinstance(other, vector3):
+            return vector3(self.x * other.x, self.y * other.y, self.z * other.z)
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other : float):
+
+        """Divide a vector by a scalar."""
+
+        if isinstance(other, float):
+            return vector3(self.x / other, self.y / other, self.z / other)
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other : vector3):
+
+        """Divide two vectors."""
+
+        if isinstance(other, vector3):
+            return vector3(self.x / other.x, self.y / other.y, self.z / other.z)
+        else:
+            return NotImplemented
+
+    def __neg__(self):
+        
+        """Invert the sign of each vector's components."""
+
         return vector3(-self.x, -self.y, -self.z)
+    
+    def __pos__(self):
+        
+        """Make the sign of all components in the vector positive."""
 
-    def __pos__(self) -> vector3:
-        """returns the absolute value of the vector"""
         return vector3(+self.x, +self.y, +self.z)
 
-    def __add__(self, vector: vector3) -> vector3:
-        """Adds two vectors or adds a scalar to a vector"""
+    def __abs__(self):
 
-        if isinstance(vector, vector3):
+        """Make the sign of all components in the vector positive."""
+        
+        return +self
 
-            x = self.x + vector.x
-            y = self.y + vector.y
-            z = self.z + vector.z
+    def __eq__(self, other : vector3):
 
-            return vector3(x, y, z)
+        """Check if two vectors are equal."""
 
+        if isinstance(other, vector3):
+            return self.x == other.x and self.y == other.y and self.z == other.z
         else:
+            return NotImplemented
 
-            x = self.x + vector
-            y = self.y + vector
-            z = self.z + vector
+    def __ne__(self, other : vector3):
 
-            return vector3(x, y, z)
+        """Check if two vectors are not equal."""
 
-    def __sub__(self, vector: vector3) -> vector3:
-        """Subtracts two vectors or Subtracts a scalar from a vector"""
-
-        if isinstance(vector, vector3):
-
-            x = self.x - vector.x
-            y = self.y - vector.y
-            z = self.z - vector.z
-
-            return vector3(x, y, z)
-
+        if isinstance(other, vector3):
+            return self.x != other.x or self.y != other.y or self.z != other.z
         else:
+            return NotImplemented
 
-            x = self.x - vector
-            y = self.y - vector
-            z = self.z - vector
+    def norm(self):
+            
+        """The norm of the vector"""
 
-            return vector3(x, y, z)
+        return np.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def __mul__(self, vector: vector3) -> vector3:
-        """multiplies a vector by a scalar or another vector"""
+    def normalize(self):
 
-        if isinstance(vector, vector3):
+        """Normalize the vector."""
 
-            x = self.x * vector.x
-            y = self.y * vector.y
-            z = self.z * vector.z
+        return self / self.norm()
 
-            return vector3(x, y, z)
+    def dot(self, other : vector3):
 
+        """Dot product of two vectors."""
+
+        if isinstance(other, vector3):
+            return self.x * other.x + self.y * other.y + self.z * other.z
         else:
+            return NotImplemented
 
-            x = self.x * vector
-            y = self.y * vector
-            z = self.z * vector
+    def cross(self, other : vector3):
 
-            return vector3(x, y, z)
+        """Cross product of two vectors."""
 
-    def __truediv__(self, vector: vector3) -> vector3:
-        """divides a vector by a scalar or another vector"""
-
-        if isinstance(vector, vector3):
-
-            x = self.x / vector.x
-            y = self.y / vector.y
-            z = self.z / vector.z
-
-            return vector3(x, y, z)
-
+        if isinstance(other, vector3):
+            return vector3(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
         else:
+            return NotImplemented
 
-            x = self.x / vector
-            y = self.y / vector
-            z = self.z / vector
-
-            return vector3(x, y, z)
-
-    def __eq__(self, vector: vector3) -> bool:
-        """returns true if both vectors are equal"""
-
-        if isinstance(vector, vector3):
-
-            if self.x == vector.x and self.y == vector.y and self.z == vector.z:
-                return True
-            else:
-                return False
-
-        else:
-            return False
-
-    def __ne__(self, vector: vector3) -> bool:
-        """returns true if both vectors are not equal"""
-
-        if isinstance(vector, vector3):
-
-            if self.x != vector.x and self.y != vector.y and self.z != vector.z:
-                return True
-            else:
-                return False
-
-        else:
-            return False
-
-    def __abs__(self) -> vector3:
-        """returns the absolute value of the vector"""
-
-        return vector3(abs(self.x), abs(self.y), abs(self.z))
-
-    def __round__(self, n) -> vector3:
-        """rounds the vector to n
-
-        Params:
-
-        n - decimal to round to """
+    def __round__(self, n):
+    
+        """Round the components of the vector to the nearest nth place."""
 
         return vector3(round(self.x, n), round(self.y, n), round(self.z, n))
 
-    def norm(self) -> float:
-        """returns the length of the vector"""
+@dataclass
+class quaternion:
 
-        norm = math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
+    """Class representing a quaternion."""
 
-        if norm == 0.0:
-            norm = 0.000000001
+    w : float = 1.0
+    x : float = 0.0
+    y : float = 0.0
+    z : float = 0.0
 
-        return norm
+    def __init__(self, w : float = 1.0, x : float = 0.0, y : float = 0.0, z : float = 0.0):
 
-    def normalize(self) -> vector3:
-        """normalizes the vector"""
+        """Initialize a quaternion object.
 
-        norm = self.norm()
+        parameters:
 
-        self.x /= norm
-        self.y /= norm
-        self.z /= norm
+        w : float
+            w-component of the quaternion
 
-        return self
+        x : float
+            x-component of the quaternion
 
-    def dir(self) -> vector3:
-        return vector3(math.atan2(self.z, self.y), math.atan2(self.z, self.x), math.atan2(self.y, self.x))
+        y : float
+            y-component of the quaternion
 
-    def dotProduct(self, vector) -> float:
-        if isinstance(vector, vector3):
-            return ((self.x * vector.x) + (self.y * vector.y) + (self.z * vector.z))
-        else:
-            return None
-
-    def crossProduct(self, vector: vector3) -> vector3:
-
-        if isinstance(vector, vector3):
-            # ty perry
-            return vector3((self.y * vector.z) - (self.z * vector.y), (self.z * vector.x) - (self.x * vector.z), (self.x * vector.y) - (self.y * vector.x))
-
-    def angleBetweenVectors(self, vector: vector3) -> vector3:
-        if isinstance(vector, vector3):
-            return math.acos(self.dotProduct(vector) / (self.norm() * vector.norm()))
-        else:
-            return None
-
-    def fromQuaternion(self, quaternion: Quaternion) -> vector3:
-
-        if isinstance(quaternion, Quaternion):
-
-            self.x = quaternion.x
-            self.y = quaternion.y
-            self.z = quaternion.z
-
-            return self
-        else:
-            return None
-
-
-class Quaternion:
-
-    def __init__(self, w=1.0, x=0.0, y=0.0, z=0.0):
-        """A class representing a quaternion"""
+        z : float
+            z-component of the quaternion
+        """
 
         self.w = w
         self.x = x
         self.y = y
         self.z = z
 
-    def __eq__(self, quaternion) -> bool:
+        pass
 
-        if isinstance(quaternion, Quaternion):
+    def __str__(self):
+        
+        """Return a string representation of the quaternion."""
 
-            if self.w == quaternion.w and self.x == quaternion.x and self.y == quaternion.y and self.z == quaternion.z:
-                return True
+        return f"{self.w}, {self.x}, {self.y}, {self.z}"
+    
+    def __repr__(self):
+            
+        """Return a complex string representation of the quaternion."""
 
-            else:
-                return False
+        return f"quaternion({self.w}, {self.x}, {self.y}, {self.z})"
 
-    def __ne__(self, quaternion) -> bool:
+    def __mul__(self, other : quaternion):
 
-        if isinstance(quaternion, Quaternion):
+        """Multiply two quaternions.
 
-            if self.w != quaternion.w and self.x != quaternion.x and self.y != quaternion.y and self.z != quaternion.z:
-                return True
+        parameters:
 
-            else:
-                return False
+        other : quaternion
+            quaternion to multiply by
+        """
 
-    def __str__(self) -> str:
+        qNew = quaternion(1.0, 0.0, 0.0, 0.0)
 
-        return str(self.w) + ',' + str(self.x) + ',' + str(self.y) + ',' + str(self.z)
-
-    def __add__(self, quaternion) -> Quaternion:
-
-        if isinstance(quaternion, Quaternion):
-
-            w = self.w + quaternion.w
-            x = self.x + quaternion.x
-            y = self.y + quaternion.y
-            z = self.z + quaternion.z
-
-            return Quaternion(w, x, y, z)
-
-        else:
-
-            w = self.w + quaternion
-            x = self.x + quaternion
-            y = self.y + quaternion
-            z = self.z + quaternion
-
-            return Quaternion(w, x, y, z)
-
-    def __sub__(self, quaternion) -> Quaternion:
-
-        if isinstance(quaternion, Quaternion):
-
-            w = self.w - quaternion.w
-            x = self.x - quaternion.x
-            y = self.y - quaternion.y
-            z = self.z - quaternion.z
-
-            return Quaternion(w, x, y, z)
-
-        else:
-
-            w = self.w - quaternion
-            x = self.x - quaternion
-            y = self.y - quaternion
-            z = self.z - quaternion
-
-            return Quaternion(w, x, y, z)
-
-    def __mul__(self, quaternion) -> Quaternion:
-
-        qNew = Quaternion(1.0, 0.0, 0.0, 0.0)
-
-        qNew.w = (self.w * quaternion.w) - (self.x * quaternion.x) - (self.y *
-                                                                      quaternion.y) - (self.z * quaternion.z)  # im no betting man but if i were
-        qNew.x = (self.w * quaternion.x) + (self.x * quaternion.w) + (self.y *
-                                                                      quaternion.z) - (self.z * quaternion.y)  # i would bet that at least one
-        qNew.y = (self.w * quaternion.y) - (self.x * quaternion.z) + (self.y *
-                                                                      quaternion.w) + (self.z * quaternion.x)  # of the operations in this function
-        qNew.z = (self.w * quaternion.z) + (self.x * quaternion.y) - \
-            (self.y * quaternion.x) + (self.z * quaternion.w)  # is wrong
+        qNew.w = (self.w * quaternion.w) - (self.x * quaternion.x) - (self.y * quaternion.y) - (self.z * quaternion.z)  # im no betting man but if i were
+        qNew.x = (self.w * quaternion.x) + (self.x * quaternion.w) + (self.y * quaternion.z) - (self.z * quaternion.y)  # i would bet that at least one
+        qNew.y = (self.w * quaternion.y) - (self.x * quaternion.z) + (self.y * quaternion.w) + (self.z * quaternion.x)  # of the operations in this function
+        qNew.z = (self.w * quaternion.z) + (self.x * quaternion.y) - (self.y * quaternion.x) + (self.z * quaternion.w)  # is wrong
 
         # future ZegesMenden here - i was right
 
         return qNew
 
-    def norm(self) -> Quaternion:
+    def conj(self):
 
-        n = math.sqrt(self.w ** 2 + self.x ** 2 + self.y ** 2 + self.z ** 2)
+        """Return the conjugate of the quaternion."""
 
-        self.w /= n
-        self.x /= n
-        self.y /= n
-        self.z /= n
+        return quaternion(self.w, -self.x, -self.y, -self.z)
 
-        return self
+    def norm(self):
+        
+        """Return the norm of the quaternion."""
 
-    def conj(self) -> Quaternion:
+        return np.sqrt(self.w**2 + self.x**2 + self.y**2 + self.z**2)
 
-        return Quaternion(self.w, -self.x, -self.y, -self.z)
+    def normalize(self):
 
-    def fractional(self, alpha) -> Quaternion:
+        """Normalize the quaternion."""
 
-        self.w = 1-alpha + alpha*self.w
-        self.x *= alpha
-        self.y *= alpha
-        self.z *= alpha
+        return self / self.norm()
+
+    def rotate(self, vector : vector3):
+
+        """Rotate a vector by the quaternion.
+
+        parameters:
+
+        vector : vector3
+            vector to rotate
+        """
+
+        q = quaternion(0.0, vector.x, vector.y, vector.z)
+
+        q = self * q * self.conj()
+
+        return vector3(q.x, q.y, q.z)
+
+    def rotate(self, vector : quaternion):
+
+        """Rotate a vector by the quaternion.
+
+        parameters:
+
+        vector : quaternion
+            vector to rotate
+        """
+
+        q = self * vector * self.conj()
+
+        return q
+
+    def fractional(self, a):
+
+        """Return the fractional of the quaternion."""
+
+        self.w = 1-a + a*self.w
+        self.x *= a
+        self.y *= a
+        self.z *= a
 
         return self.norm()
 
-    def eulerToQuaternion(self, roll, pitch, yaw) -> Quaternion:
+    def rotation_between_vectors(self, vector : vector3):
+            
+        """Return the rotation quaternion between two vectors.
 
-        cr = math.cos(roll / 2)
-        cp = math.cos(pitch / 2)
-        cy = math.cos(yaw / 2)
+        parameters:
 
-        sr = math.sin(roll / 2)
-        sp = math.sin(pitch / 2)
-        sy = math.sin(yaw / 2)
+        vector : vector3
+            vector to rotate
+        """
+
+        q = quaternion(0.0, vector.x, vector.y, vector.z)
+
+        q = self * q
+        q.w = 1 - q.w
+
+        return q.normalize()
+
+    def from_axis_angle(self, axis : vector3, angle : float):
+    
+        """Return the quaternion from an axis and angle.
+
+        parameters:
+
+        axis : vector3
+            axis of rotation
+
+        angle : float
+            angle of rotation
+        """
+
+        sa : float = np.sin(angle / 2)
+
+        self.w = np.cos(angle / 2)
+        self.x = axis.x * sa
+        self.y = axis.y * sa
+        self.z = axis.z * sa
+
+        return self
+
+    def euler_to_quaternion(self, euler_angles : vector3):
+
+        """Convert euler angles to a quaternion.
+
+        parameters:
+
+        euler_angles : vector3
+            euler angles to convert
+        """
+
+        cr = np.cos(euler_angles.x / 2)
+        cp = np.cos(euler_angles.y / 2)
+        cy = np.cos(euler_angles.z / 2)
+
+        sr = np.sin(euler_angles.x / 2)
+        sp = np.sin(euler_angles.y / 2)
+        sy = np.sin(euler_angles.z / 2)
 
         self.w = cr * cp * cy + sr * sp * sy
         self.x = sr * cp * cy - cr * sp * sy
@@ -334,340 +361,14 @@ class Quaternion:
         self.z = cr * cp * sy - sr * sp * cy
 
         return self
+    
+    def quaternion_to_euler(self):
 
-    def quaternionToEuler(self) -> vector3:
+        """Convert a quaternion to euler angles."""
 
-        r = math.atan2(2.0 * (self.w * self.x + self.y * self.z),
-                       1.0 - 2.0 * (self.x ** 2 + self.y ** 2))
-        p = 2.0 * (self.w * self.y - self.z * self.x)
-        y = math.atan2(2.0 * (self.w * self.z + self.x * self.y),
-                       1.0 - 2.0 * (self.y ** 2 + self.z ** 2))
+        x = np.arctan2(2 * (self.w * self.x + self.y * self.z), 1 - 2 * (self.x**2 + self.y**2))
+        y = np.arcsin(2 * (self.w * self.y - self.z * self.x))
+        z = np.arctan2(2 * (self.w * self.z + self.x * self.y), 1 - 2 * (self.y**2 + self.z**2))
 
-        return vector3(r, p, y)
+        return vector3(x, y, z)
 
-    def fromAxisAngle(self, t, x, y, z) -> Quaternion:
-
-        sn = math.sin(t / 2.0)
-
-        self.w = math.cos(t / 2.0)
-        self.x = x * sn
-        self.y = y * sn
-        self.z = z * sn
-
-        return self
-
-    def rotation_between_vectors(self, v: vector3) -> vector3:
-
-        qnew: Quaternion = self * Quaternion().fromVector(v)
-        qnew.w = 1 - qnew.w
-
-        return qnew.norm()
-
-    def rotateVector(self, v) -> vector3:
-
-        if isinstance(v, vector3):
-
-            rVector = Quaternion(0.0, 0.0, 0.0, 0.0).fromVector(v)
-            rVector = self * rVector * self.conj()
-
-            return vector3(0, 0, 0).fromQuaternion(rVector)
-        elif isinstance(v, Quaternion):
-
-            v.w = 0.0
-            v = self * v * self.conj()
-
-            return vector3(0, 0, 0).fromQuaternion(v)
-
-        else:
-
-            return TypeError
-
-    def fromVector(self, vector) -> Quaternion:
-
-        if isinstance(vector, vector3):
-
-            self.x = vector.x
-            self.y = vector.y
-            self.z = vector.z
-
-            return self
-        elif isinstance(vector, Quaternion):
-
-            self = vector
-
-            return self
-        else:
-            raise TypeError
-
-
-class TVC:
-
-    def __init__(self):
-
-        self.command = vector3()
-
-        self.position = vector3()
-
-        self.Servoposition = vector3()
-
-        self.min = vector3()
-        self.max = vector3()
-
-        self.offset = vector3()
-
-        self.noise = vector3()
-
-        self.servoSpeed = 0.0
-
-        self.linkageRatio = 0.0
-
-        self.force = vector3(0.0, 0.0, 0.0)
-
-    def actuate(self, command_angles: vector3, dt):
-
-        self.command.y = command_angles.y * RAD_TO_DEG * 4.0
-        self.command.z = command_angles.z * RAD_TO_DEG * 4.0
-
-        errorY = self.command.y - self.Servoposition.y
-        errorZ = self.command.z - self.Servoposition.z
-
-        speedY = 250 * dt
-        speedZ = 250 * dt
-
-        # errorY = clamp(errorY, -speedY, speedY)
-        # errorZ = clamp(errorZ, -speedZ, speedZ)
-
-        self.Servoposition.y += errorY
-        self.Servoposition.z += errorZ
-
-        self.position.y = (round(self.Servoposition.y, 5) / 4.0 +
-                           random.randint(-100, 100) / 100 * self.noise.y) * DEG_TO_RAD
-        self.position.z = (round(self.Servoposition.z, 5) / 4.0 +
-                           random.randint(-100, 100) / 100 * self.noise.z) * DEG_TO_RAD
-
-        self.position.y += self.offset.y
-        self.position.z += self.offset.z
-
-        self.position.y = clamp(
-            self.position.y, -5 * DEG_TO_RAD, 5 * DEG_TO_RAD)
-        self.position.z = clamp(
-            self.position.z, -5 * DEG_TO_RAD, 5 * DEG_TO_RAD)
-
-    def calculateForces(self, thrust):
-
-        self.force.y = math.sin(self.position.y) * thrust
-        self.force.z = math.sin(self.position.z) * thrust
-        self.force.x = thrust - self.force.y - self.force.z
-
-
-class physicsBody:
-
-    def __init__(self) -> None:
-        """A class representing an object in 3-dimensional space with 6 degrees of freedom.
-
-        ALL VARIABLES ARE IN SI UNITS
-
-        Variables:
-
-        floor - if true the body will not be able to move or rotate when touching the ground
-
-        position - the position of the body
-
-        velocity - the velocity of the body
-
-        rotation_euler - the rotation of the body in euler angles
-
-        rotation_quaternion - the rotation of the body as a quaternion
-
-        rotational_velocity - the speed at which the body is rotating
-
-        """
-
-        # mass inertia and other physical charictaristics
-
-        self.dryMass = 0.0
-        self.mass = 0.0
-
-        self.moment_of_inertia: vector3 = vector3()
-
-        self.gravity: vector3 = vector3()
-
-        self.cp_location: vector3 = vector3()
-
-        self.floor: bool = True
-
-        # position velocity and rotation
-
-        self.position: vector3 = vector3()
-        self.velocity: vector3 = vector3()
-
-        self.rotation_euler: vector3 = vector3()
-        self.rotation_quaternion: Quaternion = Quaternion()
-
-        # local values are used for returning values for IMUs
-
-        self.local_rotational_velocity: vector3 = vector3()
-        self.rotational_velocity: vector3 = vector3()
-
-        self.rotational_acceleration: vector3 = vector3()
-
-        self.acceleration_local: vector3 = vector3()
-        self.acceleration_inertial: vector3 = vector3()
-
-        # aerodynamics
-
-        self.drag_coefficient: float = 0.0
-        self.drag_area: float = 0.0
-
-        self.drag_force: vector3 = vector3()
-
-        self.angle_of_attack: float = 0.0
-
-        self.wind_speed: vector3 = vector3()
-
-    def addForce(self, force: vector3) -> None:
-
-        if isinstance(force, vector3):
-
-            accel = force / self.mass
-            self.acceleration_inertial += accel
-            self.acceleration_local += self.rotation_quaternion.conj().rotateVector(accel)
-        else:
-
-            raise TypeError
-
-    def addLocalForce(self, force: vector3) -> None:
-
-        if isinstance(force, vector3):
-
-            self.addForce(self.rotation_quaternion.rotateVector(force))
-
-        else:
-
-            raise TypeError
-
-    def addTorque(self, torque: vector3) -> None:
-        """Applies a torque to the body from a global position
-
-        Params:
-
-        torque - a vector representing the torque on the body"""
-
-        if isinstance(torque, vector3):
-
-            self.rotational_acceleration += vector3(torque.x / self.moment_of_inertia.x,
-                                                    torque.y / self.moment_of_inertia.y, torque.z / self.moment_of_inertia.z)
-
-        else:
-            raise TypeError
-
-    def addTorqueLocal(self, torque: vector3) -> None:
-        """Applies a torque to the body from a local position and rotation
-
-        Params:
-
-        torque - a vector representing the torque on the body"""
-
-        if isinstance(torque, vector3):
-
-            globalTorque = self.rotation_quaternion.rotateVector(torque)
-            self.addTorque(globalTorque)
-
-        else:
-            raise TypeError
-
-    def applyForce(self, force: vector3, displacement: vector3) -> None:
-        """Applies a force to the body from a global position and rotation 
-
-        Params:
-
-        force - a force vector
-
-        displacement - a vector representing the global displacement of the force"""
-
-        if isinstance(force, vector3) and isinstance(displacement, vector3):
-
-            torque = displacement.crossProduct(force)
-            accel = force / self.mass
-
-            self.addTorque(torque)
-            self.acceleration_inertial += accel
-            self.acceleration_local += self.rotation_quaternion.conj().rotateVector(accel)
-
-        else:
-            raise TypeError
-
-    def applyLocalForce(self, force: vector3, displacement: vector3) -> None:
-        """Applies a force to the body from a local position and rotation
-
-        Params:
-
-        force - a force vector
-
-        displacement - a vector representing the local displacement of the force """
-
-        if isinstance(force, vector3) and isinstance(displacement, vector3):
-
-            gForce = self.rotation_quaternion.rotateVector(force)
-            gPos = self.rotation_quaternion.rotateVector(displacement)
-
-            self.applyForce(gForce, gPos)
-
-        else:
-            raise TypeError
-
-    def update_aerodynamics(self) -> None:
-        """Calculates the aerodynamic torques and forces acting upon the body"""
-
-        velRelative: vector3 = self.velocity - self.wind_speed
-
-        if velRelative.x != 0.0 and velRelative.y != 0.0 and velRelative.z != 0.0:
-
-            self.aoa = velRelative.angleBetweenVectors(
-                self.rotation_quaternion.rotateVector(vector3(1.0, 0.0, 0.0)))
-
-            dc = self.drag_coefficient * self.aoa
-
-            if self.floor == True and self.position.x != 0.0:
-                self.drag_force = -velRelative.normalize() * 0.5 * 1.225 * \
-                    (self.velocity.norm() ** 2) * dc * self.drag_area
-            elif self.floor == False:
-                self.drag_force = -velRelative.normalize() * 0.5 * 1.225 * \
-                    (self.velocity.norm() ** 2) * dc * self.drag_area
-
-    def update(self, dt):
-        """Updates the body's position, velocity, rotation, etc
-
-        Params:
-
-        dt - delta time in seconds"""
-
-        # rotation and rotational acceleration
-
-        angle = self.rotational_velocity.norm()
-
-        self.rotation_quaternion *= Quaternion(0.0, 0.0, 0.0, 0.0).fromAxisAngle(
-            angle*dt, self.rotational_velocity.x/angle, self.rotational_velocity.y/angle, self.rotational_velocity.z/angle)
-        self.rotation_euler = self.rotation_quaternion.quaternionToEuler()
-
-        self.rotational_velocity += self.rotational_acceleration * dt
-
-        # position velocity and acceleration
-
-        # self.acceleration_local = self.rotation_quaternion.conj(
-        # ).rotateVector(self.acceleration_inertial)
-
-        self.acceleration_inertial += self.gravity
-
-        self.velocity += self.acceleration_inertial * dt
-        self.position += self.velocity * dt
-
-        if self.position.x <= 0 and self.floor == True:
-            self.velocity = vector3()
-            self.rotational_velocity = vector3()
-            self.position.x = 0.0
-
-    def clear(self) -> None:
-        self.rotational_acceleration = vector3()
-        self.acceleration_inertial = vector3()
-        self.acceleration_local = vector3()

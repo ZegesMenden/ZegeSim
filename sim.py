@@ -41,10 +41,11 @@ rocket.IMU.sampleRateGyro = 1 / settingsLoader.imu_gyro_read_speed
 rocket.barometer.readDelay = 1 / settingsLoader.baro_read_speed
 rocket.rocket_motor.maxIgnitionDelay = settingsLoader.max_ignition_delay
 
-rocket.tvc.linkageRatio = settingsLoader.linkage_ratio
+rocket.tvc.linkage_ratio = settingsLoader.linkage_ratio
 rocket.tvc.max = settingsLoader.max_tvc
 rocket.tvc.min = settingsLoader.max_tvc * -1
 rocket.tvc_location = settingsLoader.tvc_location
+rocket.tvc.servo_speed = settingsLoader.tvc_servo_speed
 rocket.body.cp_location = settingsLoader.cp_location
 
 rocket.IMU.gyroNoise = vector3(0.5, 0.5, 0.5) * DEG_TO_RAD

@@ -249,10 +249,10 @@ def read_gps(rocket: rocketBody) -> None:
 
 def TVC_update(rocket: rocketBody) -> None:
 
-    FSF_pitch.setpoint = 5 * DEG_TO_RAD
+    # FSF_pitch.setpoint = 5 * DEG_TO_RAD
 
-    FSF_pitch.compute(NAV.orientation_euler.y, NAV.oriRates.y)
-    FSF_yaw.compute(NAV.orientation_euler.z, NAV.oriRates.z)
+    FSF_pitch.compute(rocket.body.rotation_euler.y, NAV.oriRates.y)
+    FSF_yaw.compute(rocket.body.rotation_euler.z, NAV.oriRates.z)
 
     TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, NAV.accelerationLocal.x, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
     TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, NAV.accelerationLocal.x, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
@@ -263,8 +263,8 @@ def TVC_update(rocket: rocketBody) -> None:
     tvcy = TVC_y * cr - TVC_z * sr
     tvcz = TVC_y * sr + TVC_z * cr
 
-    return vector3(0.0, tvcy, tvcz)
-    # return vector3(0.0, TVC_y, TVC_z)
+    # return vector3(0.0, tvcy, tvcz)
+    return vector3(0.0, TVC_y, TVC_z)
 
 
 def setup(rocket: rocketBody) -> None:

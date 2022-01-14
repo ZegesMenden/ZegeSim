@@ -1,3 +1,4 @@
+import os
 from os import error
 from simulation.dataManagement import dataVisualiser
 import csv
@@ -21,7 +22,7 @@ class plotter:
         self.n_plots: int = 0
 
     def read_header(self, file_name):
-
+        os.chdir('..')
         f = open(file_name, "r")
         self.header = f.readline()
         self.data_descriptions = self.header.split(',')

@@ -2,10 +2,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
-from simulation.physics_old import clamp
-
 DEG_TO_RAD = np.pi / 180.0
 RAD_TO_DEG = 180 / np.pi
+
+# ty orlando <3
+
+
+def clamp(n, minn, maxn):  # Clamps output to a range
+    return max(min(maxn, n), minn)
 
 
 @dataclass
@@ -141,6 +145,13 @@ class vector3:
         else:
             return NotImplemented
 
+    def angle_between_vectors(self, vector: vector3) -> float:
+        """Calculate the angle between two vectors."""
+        if isinstance(vector, vector3):
+            return np.arccos(self.dot(vector) / (self.norm() * vector.norm()))
+        else:
+            return None
+
     def __round__(self, n) -> vector3:
         """Round the components of the vector to the nearest nth place."""
 
@@ -201,12 +212,16 @@ class quaternion:
             quaternion to multiply by
         """
 
-        qNew = quaternion(1.0, 0.0, 0.0, 0.0)
+        qNew: quaternion = quaternion(1.0, 0.0, 0.0, 0.0)
 
-        qNew.w = (self.w * other.w) - (self.x * other.x) - (self.y * other.y) - (self.z * other.z)  # im no betting man but if i were
-        qNew.x = (self.w * other.x) + (self.x * other.w) + (self.y * other.z) - (self.z * other.y)  # i would bet that at least one
-        qNew.y = (self.w * other.y) - (self.x * other.z) + (self.y * other.w) + (self.z * other.x)  # of the operations in this function
-        qNew.z = (self.w * other.z) + (self.x * other.y) - (self.y * other.x) + (self.z * other.w)  # is wrong
+        qNew.w = (self.w * other.w) - (self.x * other.x) - (self.y *
+                                                            other.y) - (self.z * other.z)  # im no betting man but if i were
+        qNew.x = (self.w * other.x) + (self.x * other.w) + (self.y *
+                                                            other.z) - (self.z * other.y)  # i would bet that at least one
+        qNew.y = (self.w * other.y) - (self.x * other.z) + (self.y * other.w) + \
+            (self.z * other.x)  # of the operations in this function
+        qNew.z = (self.w * other.z) + (self.x * other.y) - \
+            (self.y * other.x) + (self.z * other.w)  # is wrong
 
         # future ZegesMenden here - i was right
 
@@ -225,7 +240,7 @@ class quaternion:
     def normalize(self) -> quaternion:
         """Normalize the quaternion."""
 
-        n : float = self.norm()
+        n: float = self.norm()
         return quaternion(self.w / n, self.x / n, self.y / n, self.z / n)
 
     def rotate(self, vector) -> vector3:
@@ -243,9 +258,9 @@ class quaternion:
             q = self * q * self.conj()
 
             return vector3(q.x, q.y, q.z)
-        
+
         elif isinstance(vector, quaternion):
-            
+
             q = self * vector * self.conj()
 
             return q
@@ -326,12 +341,14 @@ class quaternion:
     def quaternion_to_euler(self) -> vector3:
         """Convert a quaternion to euler angles."""
 
-        x = np.arctan2(2.0 * (self.w * self.x + self.y * self.z), 1.0 - 2.0 * (self.x**2 + self.y**2))
+        x = np.arctan2(2.0 * (self.w * self.x + self.y * self.z),
+                       1.0 - 2.0 * (self.x**2 + self.y**2))
         y = np.arcsin(2.0 * (self.w * self.y - self.z * self.x))
-        z = np.arctan2(2.0 * (self.w * self.z + self.x * self.y), 1.0 - 2.0 * (self.y**2 + self.z**2))
+        z = np.arctan2(2.0 * (self.w * self.z + self.x * self.y),
+                       1.0 - 2.0 * (self.y**2 + self.z**2))
 
         return vector3(x, y, z)
-        
+
     def from_vector(self, vector: vector3) -> quaternion:
         """Return the quaternion from a vector.
 
@@ -376,25 +393,33 @@ class TVC:
 
         self.command.y = command_angles.y * RAD_TO_DEG * 4.0
         self.command.z = command_angles.z * RAD_TO_DEG * 4.0
-
-        actuation_y = clamp(self.command.y - self.servo_position.y, -self.servo_speed, self.servo_speed)
-        actuation_z = clamp(self.command.z - self.servo_position.z, -self.servo_speed, self.servo_speed)
-
+        
+        actuation_y = clamp(
+            self.command.y - self.servo_position.y, -self.servo_speed, self.servo_speed)
+        actuation_z = clamp(
+            self.command.z - self.servo_position.z, -self.servo_speed, self.servo_speed)
+        
         self.servo_position.y += actuation_y * dt
         self.servo_position.z += actuation_z * dt
 
-        self.servo_position.y = clamp(self.servo_position.y, self.min.y, self.max.y)
-        self.servo_position.z = clamp(self.servo_position.z, self.min.z, self.max.z)
+        self.servo_position.y = clamp(
+            self.servo_position.y, self.min.y, self.max.y)
+        self.servo_position.z = clamp(
+            self.servo_position.z, self.min.z, self.max.z)
 
-        self.position.y = (self.servo_position.y + self.offset.y) * self.linkage_ratio * DEG_TO_RAD
-        self.position.z = (self.servo_position.z + self.offset.z) * self.linkage_ratio * DEG_TO_RAD
-
+        self.position.y = ((self.servo_position.y +
+                           self.offset.y) * self.linkage_ratio) * DEG_TO_RAD
+        self.position.z = ((self.servo_position.z +
+                           self.offset.z) * self.linkage_ratio) * DEG_TO_RAD
 
     def calculate_forces(self, thrust):
 
         self.force.y = np.sin(self.position.y) * thrust
         self.force.z = np.sin(self.position.z) * thrust
-        self.force.x = thrust * np.cos(self.position.y) - (thrust - ( thrust * np.cos(self.position.z) ) )
+        self.force.x = thrust * \
+            np.cos(self.position.y) - (thrust -
+                                       (thrust * np.cos(self.position.z)))
+
 
 @dataclass
 class physics_body:
@@ -434,7 +459,7 @@ class physics_body:
     rotation: quaternion = quaternion()
     rotation_euler: vector3 = vector3()
     rotational_velocity: vector3 = vector3()
-    
+
     rotational_velocity_local: vector3 = vector3()
 
     rotational_acceleration: vector3 = vector3()
@@ -444,9 +469,15 @@ class physics_body:
 
     floor: bool = True
 
+    wind: vector3 = vector3()
+    drag_force: vector3 = vector3()
+    drag_area: float = 0.0
+    drag_coefficient: float = 0.0
+
     def __init__(self, position: vector3 = vector3(), velocity: vector3 = vector3(), acceleration: vector3 = vector3(), gravity: vector3 = vector3(),
                  mass: float = 0.0, moment_of_inertia: vector3 = vector3(), floor: bool = True, rotation: quaternion = quaternion(), rotational_velocity: vector3 = vector3(),
-                 rotational_acceleration: vector3 = vector3(), acceleration_local: vector3() = vector3(), rotational_velocity_local: vector3() = vector3(), rotation_euler: vector3 = vector3()) -> None:
+                 rotational_acceleration: vector3 = vector3(), acceleration_local: vector3() = vector3(), rotational_velocity_local: vector3() = vector3(), rotation_euler: vector3 = vector3(),
+                 wind: vector3 = vector3(), drag_force: vector3 = vector3(), drag_area: float = 0.0, drag_coefficient: float = 0.0) -> None:
         """Initialize the physics body."""
 
         self.position = position
@@ -462,6 +493,11 @@ class physics_body:
         self.acceleration_local = acceleration_local
         self.rotational_velocity_local = rotational_velocity_local
         self.rotation_euler = rotation_euler
+
+        self.wind = wind
+        self.drag_force = drag_force
+        self.drag_area = drag_area
+        self.drag_coefficient = drag_coefficient
 
         pass
 
@@ -525,8 +561,9 @@ class physics_body:
             force to apply
         """
 
-        torque = point.cross(force)
+        torque: vector3 = point.cross(force)
         self.add_torque(torque)
+        print(torque)
 
         self.add_force(force)
 
@@ -541,30 +578,64 @@ class physics_body:
         point : vector3
             point to add the force to
         """
+        if isinstance(point, vector3) and isinstance(force, vector3):
 
-        nf: vector3 = self.rotation.rotate(force)
+            nf: vector3 = self.rotation.rotate(force)
+            np: vector3 = self.rotation.rotate(point)
 
-        self.add_force(nf)
+            self.add_global_point_force(nf, np)
+
+    def update_aero(self):
+
+        """Updates aerodynamic forces acting on the body.
+        
+        Note - you still need to apply the drag force to the physics body with apply_glocal_point_force()."""
+
+        velocity_relative_wind: vector3 = self.velocity - self.wind_speed
+
+        if velocity_relative_wind.x != 0.0 and velocity_relative_wind.y != 0.0 and velocity_relative_wind.z != 0.0:
+
+            self.aoa = velocity_relative_wind.angle_between_vectors(
+                self.rotation.rotate(vector3(1.0, 0.0, 0.0)))
+
+            dc = self.drag_coefficient * self.aoa
+
+            if self.floor == True and self.position.x != 0.0:
+                self.drag_force = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
+                    (self.velocity.norm() ** 2) * dc * self.drag_area
+            elif self.floor == False:
+                self.drag_force = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
+                    (self.velocity.norm() ** 2) * dc * self.drag_area
 
     def update(self, dt: float) -> None:
         """Updates the physics body"""
+
+        self.acceleration_local = self.rotation.conj().rotate(self.acceleration)
 
         self.acceleration += self.gravity
 
         self.velocity += self.acceleration * dt
         self.position += self.velocity * dt
 
-        self.rotational_velocity += (self.rotational_acceleration * dt)
+        self.rotational_acceleration *= dt
+        self.rotational_velocity += self.rotational_acceleration
 
         ang = self.rotational_velocity.norm()
+
+        if ang == 0.0:
+            ang = 0.000000001
+
         self.rotation *= quaternion().from_axis_angle(self.rotational_velocity / ang, ang * dt)
-        
+
         self.rotation_euler = self.rotation.quaternion_to_euler()
 
-        self.acceleration_local = self.rotation.conj().rotate(self.acceleration)
         self.rotational_velocity_local = self.rotation.conj().rotate(self.rotational_velocity)
 
-        if self.floor:
+        # self.rotation_euler.x = 0.0
+        # self.rotational_velocity.x = 0.0
+        # self.rotation = quaternion().euler_to_quaternion(self.rotation_euler)
+
+        if self.floor and self.position.x <= 0.0:
 
             self.position.x = 0.0
             self.velocity.x = 0.0
@@ -572,5 +643,5 @@ class physics_body:
     def clear(self) -> None:
         """clears the rotational and translational acceleration"""
 
-        self.acceleration = vector3()
+        self.acceleration = vector3(0.0, 0.0, 0.0)
         self.rotational_acceleration = vector3()

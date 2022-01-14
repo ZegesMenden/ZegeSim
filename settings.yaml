@@ -1,7 +1,7 @@
 settings:
   
-  timeStep: 100.0
-  simTime: 25.0
+  timeStep: 1000.0
+  simTime: 10.0
 
   motors: {
     "ascent": "e12",
@@ -28,7 +28,7 @@ settings:
 
   # y and z
   max_tvc_angle: [5.0, 5.0]
-  tvc_noise: 0.0025
+  tvc_noise: 0.0
 
   tvc_servo_speed: 250
   tvc_linkage_ratio: 4

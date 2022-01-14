@@ -43,10 +43,10 @@ class rocketBody:
         self.tvc.actuate(self.tvc_position, self.time_step)
 
         self.tvc.calculate_forces(self.rocket_motor.currentThrust)
-        self.body.add_local_point_force(self.tvc.force, self.tvc_location)
-
-        # self.body.update_aerodynamics()
-        # self.body.applyForce(self.body.drag_force, self.body.cp_location)
+        self.body.add_global_point_force(self.tvc.force, self.tvc_location)
+        
+        # self.body.update_aero()
+        # self.body.add_global_point_force(self.body.drag_force, self.body.cp_location)
         self.body.update(self.time_step)
 
     def clear(self):

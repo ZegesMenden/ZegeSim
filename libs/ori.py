@@ -52,6 +52,9 @@ class nav:
 
         self.orientation_euler = self.orientation_quat.quaternion_to_euler()
         
+        # self.orientation_euler.x = 0.0
+        # self.orientation_quat = quaternion().euler_to_quaternion(self.orientation_euler)
+
         self.accelerationInertial = self.orientation_quat.rotate(self.accelerationLocal)
 
         self.accelerationInertial += gravity

@@ -225,8 +225,9 @@ def read_imu(rocket: rocketBody) -> None:
 
     # if NAV.debiased:
     NAV.update(rocket.IMU.accel, rocket.IMU.oriRates,
-                rocket.body.gravity, rocket.time_step)
-    # else:
+                rocket.body.gravity, rocket.time_step * 2.0)
+    # NAV.orientation_euler.x = rocket.body.rotation_euler.x
+    #  else:
     #     if rocket.time < 1.0:
     #         NAV.measureDebias(rocket.IMU.accel, rocket.IMU.oriRates)
     #     else:
@@ -249,13 +250,13 @@ def read_gps(rocket: rocketBody) -> None:
 
 def TVC_update(rocket: rocketBody) -> None:
 
-    # FSF_pitch.setpoint = 5 * DEG_TO_RAD
+    FSF_pitch.setpoint = 5 * DEG_TO_RAD
 
     FSF_pitch.compute(rocket.body.rotation_euler.y, NAV.oriRates.y)
     FSF_yaw.compute(rocket.body.rotation_euler.z, NAV.oriRates.z)
 
-    TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, NAV.accelerationLocal.x, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
-    TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, NAV.accelerationLocal.x, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
+    TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
+    TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
 
     cr = math.cos(-NAV.orientation_euler.x)
     sr = math.sin(-NAV.orientation_euler.x)
@@ -263,8 +264,8 @@ def TVC_update(rocket: rocketBody) -> None:
     tvcy = TVC_y * cr - TVC_z * sr
     tvcz = TVC_y * sr + TVC_z * cr
 
-    # return vector3(0.0, tvcy, tvcz)
-    return vector3(0.0, TVC_y, TVC_z)
+    return vector3(0.0, tvcy, tvcz)
+    # return vector3(0.0, TVC_y, TVC_z)
 
 
 def setup(rocket: rocketBody) -> None:

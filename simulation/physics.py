@@ -391,8 +391,8 @@ class TVC:
 
     def actuate(self, command_angles: vector3, dt):
 
-        self.command.y = command_angles.y * RAD_TO_DEG * 4.0
-        self.command.z = command_angles.z * RAD_TO_DEG * 4.0
+        self.command.y = command_angles.y * RAD_TO_DEG * self.linkage_ratio
+        self.command.z = command_angles.z * RAD_TO_DEG * self.linkage_ratio
         
         actuation_y = clamp(
             self.command.y - self.servo_position.y, -self.servo_speed, self.servo_speed)
@@ -408,9 +408,9 @@ class TVC:
             self.servo_position.z, self.min.z, self.max.z)
 
         self.position.y = ((self.servo_position.y +
-                           self.offset.y) * self.linkage_ratio) * DEG_TO_RAD
+                           self.offset.y) / self.linkage_ratio) * DEG_TO_RAD
         self.position.z = ((self.servo_position.z +
-                           self.offset.z) * self.linkage_ratio) * DEG_TO_RAD
+                           self.offset.z) / self.linkage_ratio) * DEG_TO_RAD
 
     def calculate_forces(self, thrust):
 
@@ -520,7 +520,7 @@ class physics_body:
         torque : vector3
             torque to add
         """
-
+        
         self.rotational_acceleration += torque / self.moment_of_inertia
 
     def add_force_local(self, force: vector3) -> None:
@@ -563,7 +563,6 @@ class physics_body:
 
         torque: vector3 = point.cross(force)
         self.add_torque(torque)
-        print(torque)
 
         self.add_force(force)
 

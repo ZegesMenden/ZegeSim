@@ -1,4 +1,4 @@
-import math
+import numpy
 from simulation.physics import *
 from libs.controlMath import * 
 
@@ -17,7 +17,7 @@ class nav:
         self.oriRates = vector3(0.0, 0.0, 0.0)
         self.lastOriRates = vector3(0.0, 0.0, 0.0)
 
-        self.orientation_quat = Quaternion()
+        self.orientation_quat: quaternion = quaternion()
         self.orientation_euler = vector3(0.0, 0.0, 0.0)
 
         self.accelerationLocal = vector3(0.0, 0.0, 0.0)
@@ -48,11 +48,11 @@ class nav:
         
         ang = self.oriRates.norm()
 
-        self.orientation_quat *= Quaternion(0, 0, 0, 0).fromAxisAngle(ang*dt, self.oriRates.x/ang, self.oriRates.y/ang, self.oriRates.z/ang)
+        self.orientation_quat *= quaternion().from_axis_angle(self.oriRates / ang, ang * dt)
 
-        self.orientation_euler = self.orientation_quat.quaternionToEuler()
+        self.orientation_euler = self.orientation_quat.quaternion_to_euler()
         
-        self.accelerationInertial = self.orientation_quat.rotateVector(self.accelerationLocal)
+        self.accelerationInertial = self.orientation_quat.rotate(self.accelerationLocal)
 
         self.accelerationInertial += gravity
 
@@ -79,9 +79,9 @@ class nav:
         #     self.oriRatesFiltered = self.oriRates
     
     def accelOri(self, accel) -> None:
-        q = Quaternion().fromVector(self.orientation_quat.rotateVector(accel)) * Quaternion(0, 1, 0, 0)
+        q = quaternion().from_vector(self.orientation_quat.rotate(accel)) * quaternion(0, 1, 0, 0)
         q.w = 1 - q.w
-        self.orientation_quat = Quaternion().fromVector(self.orientation_quat.conj().rotateVector(q.fractional(0.5)))
+        self.orientation_quat = quaternion().from_vector(self.orientation_quat.conj().rotate(q.fractional(0.5)))
 
     def passBarometerData(self, barometerAlt, barometerVel, time) -> None:
         self.barometerAlt = barometerAlt

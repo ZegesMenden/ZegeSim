@@ -10,7 +10,7 @@ class rocketBody:
     def __init__(self) -> None:
         """initializes the rocket interface"""
 
-        self.body: physicsBody = physicsBody()
+        self.body: physics_body = physics_body()
 
         self.time: float = 0.0
         self.time_step: float = 0.0
@@ -42,11 +42,11 @@ class rocketBody:
         self.rocket_motor.update(self.time)
         self.tvc.actuate(self.tvc_position, self.time_step)
 
-        self.tvc.calculateForces(self.rocket_motor.currentThrust)
-        self.body.applyLocalForce(self.tvc.force, self.tvc_location)
+        self.tvc.calculate_forces(self.rocket_motor.currentThrust)
+        self.body.add_local_point_force(self.tvc.force, self.tvc_location)
 
-        self.body.update_aerodynamics()
-        self.body.applyForce(self.body.drag_force, self.body.cp_location)
+        # self.body.update_aerodynamics()
+        # self.body.applyForce(self.body.drag_force, self.body.cp_location)
         self.body.update(self.time_step)
 
     def clear(self):

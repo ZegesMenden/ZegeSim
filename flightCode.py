@@ -171,9 +171,9 @@ def record_data(rocket: rocketBody) -> None:
     DL.recordVariable("accel_y_sensed", NAV.accelerationLocal.y)
     DL.recordVariable("accel_z_sensed", NAV.accelerationLocal.z)
 
-    DL.recordVariable("accel_x_i", rocket.body.acceleration_inertial.x)
-    DL.recordVariable("accel_y_i", rocket.body.acceleration_inertial.y)
-    DL.recordVariable("accel_z_i", rocket.body.acceleration_inertial.z)
+    DL.recordVariable("accel_x_i", rocket.body.acceleration.x)
+    DL.recordVariable("accel_y_i", rocket.body.acceleration.y)
+    DL.recordVariable("accel_z_i", rocket.body.acceleration.z)
 
     DL.recordVariable("accel_x_i_sensed", NAV.accelerationInertial.x)
     DL.recordVariable("accel_y_i_sensed", NAV.accelerationInertial.y)
@@ -219,10 +219,9 @@ def record_data(rocket: rocketBody) -> None:
 
 
 def read_imu(rocket: rocketBody) -> None:
-    trueOriRates: vector3 = rocket.body.rotation_quaternion.conj().rotateVector(rocket.body.rotational_velocity)
 
     rocket.IMU.readAccel(rocket.body.acceleration_local, rocket.time)
-    rocket.IMU.readGyro(trueOriRates, rocket.time)
+    rocket.IMU.readGyro(rocket.body.rotational_velocity_local, rocket.time)
 
     # if NAV.debiased:
     NAV.update(rocket.IMU.accel, rocket.IMU.oriRates,

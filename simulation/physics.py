@@ -69,7 +69,7 @@ class vector3:
 
         if isinstance(other, vector3):
             return vector3(self.x * other.x, self.y * other.y, self.z * other.z)
-        if isinstance(other, float):
+        if isinstance(other, float) or isinstance(other, int):
             return vector3(self.x * other, self.y * other, self.z * other)
         else:
             return NotImplemented
@@ -79,7 +79,7 @@ class vector3:
 
         if isinstance(other, vector3):
             return vector3(self.x / other.x, self.y / other.y, self.z / other.z)
-        elif isinstance(other, float):
+        elif isinstance(other, float) or isinstance(other, int):
             return vector3(self.x / other, self.y / other, self.z / other)
         else:
             return NotImplemented
@@ -331,6 +331,22 @@ class quaternion:
         z = np.arctan2(2.0 * (self.w * self.z + self.x * self.y), 1.0 - 2.0 * (self.y**2 + self.z**2))
 
         return vector3(x, y, z)
+        
+    def from_vector(self, vector: vector3) -> quaternion:
+        """Return the quaternion from a vector.
+
+        parameters:
+
+        vector : vector3
+            vector to convert
+        """
+
+        self.w = 0.0
+        self.x = vector.x
+        self.y = vector.y
+        self.z = vector.z
+
+        return self
 
 
 class TVC:
@@ -411,11 +427,15 @@ class physics_body:
     velocity: vector3 = vector3()
 
     acceleration: vector3 = vector3()
+    acceleration_local: vector3 = vector3()
 
     gravity: vector3 = vector3()
 
     rotation: quaternion = quaternion()
+    rotation_euler: vector3 = vector3()
     rotational_velocity: vector3 = vector3()
+    
+    rotational_velocity_local: vector3 = vector3()
 
     rotational_acceleration: vector3 = vector3()
 
@@ -426,7 +446,7 @@ class physics_body:
 
     def __init__(self, position: vector3 = vector3(), velocity: vector3 = vector3(), acceleration: vector3 = vector3(), gravity: vector3 = vector3(),
                  mass: float = 0.0, moment_of_inertia: vector3 = vector3(), floor: bool = True, rotation: quaternion = quaternion(), rotational_velocity: vector3 = vector3(),
-                 rotational_acceleration: vector3 = vector3()) -> None:
+                 rotational_acceleration: vector3 = vector3(), acceleration_local: vector3() = vector3(), rotational_velocity_local: vector3() = vector3(), rotation_euler: vector3 = vector3()) -> None:
         """Initialize the physics body."""
 
         self.position = position
@@ -439,6 +459,9 @@ class physics_body:
         self.rotational_velocity = rotational_velocity
         self.rotational_acceleration = rotational_acceleration
         self.floor = floor
+        self.acceleration_local = acceleration_local
+        self.rotational_velocity_local = rotational_velocity_local
+        self.rotation_euler = rotation_euler
 
         pass
 
@@ -535,6 +558,11 @@ class physics_body:
 
         ang = self.rotational_velocity.norm()
         self.rotation *= quaternion().from_axis_angle(self.rotational_velocity / ang, ang * dt)
+        
+        self.rotation_euler = self.rotation.quaternion_to_euler()
+
+        self.acceleration_local = self.rotation.conj().rotate(self.acceleration)
+        self.rotational_velocity_local = self.rotation.conj().rotate(self.rotational_velocity)
 
         if self.floor:
 

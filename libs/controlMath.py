@@ -116,7 +116,7 @@ class FSF:
         self.lastOri = 0.0
 
     def compute(self, ori, oriRate):
-        self.output = -self.gain_a * (ori - self.setpoint)
+        self.output = -self.gain_a * (ori - self.setpoint) 
         self.output += -self.gain_b * oriRate
         self.lastOri = ori
 
@@ -137,8 +137,9 @@ class kalman:
 
     def update_accel(self, accel, dt) -> None:
 
+        self.pos += self.vel * dt + 0.5 * accel * (dt * dt)
         self.vel += accel * dt
-        self.pos += self.vel * dt
+        
         q_dtdt = self.Q * (dt * dt)
         self.P[0] += (self.P[2] + self.P[1] +
                       (self.P[3] + q_dtdt * 0.25) * dt) * dt
@@ -156,10 +157,10 @@ class kalman:
         K_b = self.P[2] * inv
 
         self.pos += K_a * y
-        self.vel += K_b * y
+        self.vel += K_b * self.vel
 
-        self.vel += y
-        self.vel /= 2.0
+        self.vel += y*10
+        self.vel /= 11.0
 
         self.pos += pos
         self.pos /= 2.0

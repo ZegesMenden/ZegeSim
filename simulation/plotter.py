@@ -22,7 +22,7 @@ class plotter:
         self.n_plots: int = 0
 
     def read_header(self, file_name):
-        os.chdir('..')
+        # os.chdir('..')
         f = open(file_name, "r")
         self.header = f.readline()
         self.data_descriptions = self.header.split(',')
@@ -82,8 +82,8 @@ class plotter:
             ax.set_ylim3d(-size, size)
             ax.set_zlim3d(0, size)
 
-        ax.scatter3D(plot_points[3], plot_points[2],
-                     plot_points[1], c=plot_points[3], cmap=color)
+        ax.scatter3D(plot_points[2], plot_points[1],
+                     plot_points[0], c=plot_points[2], cmap=color)
 
     def show_all_graphs(self):
         """Displays all graphs."""

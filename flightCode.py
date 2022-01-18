@@ -17,15 +17,16 @@ import random
 
 NAV = nav()
 
-NAV.posKF_x.Q = 0.25
+NAV.posKF_x.Q = 0.15
 NAV.posKF_x.R = 0.15
 
-NAV.posKF_y.Q = 0.25
+NAV.posKF_y.Q = 0.15
 NAV.posKF_y.R = 0.15
 
-NAV.posKF_z.Q = 0.25
+NAV.posKF_z.Q = 0.15
 NAV.posKF_z.R = 0.15
 
+flight_path: flightPath = flightPath()
 
 global setpoint
 setpoint: vector3 = vector3()
@@ -249,29 +250,35 @@ def read_gps(rocket: rocketBody) -> None:
 
 
 def TVC_update(rocket: rocketBody) -> None:
+    setpoint: vector3 = vector3(0.0, 0.0, 0.0)
+    if rocket.time < 4.0:
+        setpoint = flight_path.getCurrentSetpoint(rocket.time) * DEG_TO_RAD
 
-    FSF_pitch.setpoint = 5 * DEG_TO_RAD
+    FSF_pitch.setpoint = setpoint.y
+    FSF_yaw.setpoint = setpoint.z
 
-    FSF_pitch.compute(rocket.body.rotation_euler.y, NAV.oriRates.y)
-    FSF_yaw.compute(rocket.body.rotation_euler.z, NAV.oriRates.z)
+    FSF_pitch.compute(NAV.orientation_euler.y, NAV.oriRates.y)
+    FSF_yaw.compute(NAV.orientation_euler.z, NAV.oriRates.z)
 
     TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
     TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
 
-    cr = math.cos(-NAV.orientation_euler.x)
-    sr = math.sin(-NAV.orientation_euler.x)
+    cr = math.cos(-rocket.body.rotation_euler.x)
+    sr = math.sin(-rocket.body.rotation_euler.x)
 
     tvcy = TVC_y * cr - TVC_z * sr
     tvcz = TVC_y * sr + TVC_z * cr
 
     return vector3(0.0, tvcy, tvcz)
     # return vector3(0.0, TVC_y, TVC_z)
-
+    # return vector3(0.0, 0.0, 0.0)
 
 def setup(rocket: rocketBody) -> None:
     # put your setup code here, to run once:
 
     init_data()
+    
+    flight_path.loadFlightPath('../flight_path.csv')
 
     pass
 
@@ -291,7 +298,7 @@ def loop(rocket: rocketBody) -> control_data:
 
     if rocket.time > lastBaroRead + baroDT:
         read_barometer(rocket)
-
+        print("Baro: ", NAV.barometerAlt)
         lastBaroRead = rocket.time
 
     if rocket.time > lastGPSRead + gpsDT:
@@ -311,7 +318,7 @@ def loop(rocket: rocketBody) -> control_data:
         record_data(rocket)
 
         lastDatalog = rocket.time
-
+        
     cd: control_data = control_data()
     # if tvc_command.y != 0.0:
     #     print(tvc_command)

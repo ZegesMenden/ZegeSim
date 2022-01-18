@@ -99,6 +99,8 @@ class test_quaternion_math(unittest.TestCase):
 
         e = q.quaternion_to_euler()
         et = vector3(45 * DEG_TO_RAD, 45 * DEG_TO_RAD, 45 * DEG_TO_RAD)
+        print(q)
+        print(e * RAD_TO_DEG)
 
         self.assertAlmostEqual(e.x, et.x, 4)
         self.assertAlmostEqual(e.y, et.y, 4)
@@ -201,6 +203,19 @@ class test_physics_body(unittest.TestCase):
 
         self.assertAlmostEqual(body.rotation.quaternion_to_euler().x, 0.5, 4)
 
+    def test_rotation(self):
+        
+        body = physics_body()
+        
+        body.rotational_velocity = vector3(0.0, -1.0, 0.0)
+        time = 0.0
+        while time < 1:
+            # body.rotational_velocity = vector3(1.0, 1.0, 1.0)
+            body.update(0.001)
+            body.clear()
+            time += 0.001
+            print(body.rotation_euler * RAD_TO_DEG)
+        print(body.rotation_euler * RAD_TO_DEG)
     def test_local_point_force(self):
 
         body = physics_body()

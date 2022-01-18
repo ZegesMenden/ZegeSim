@@ -54,11 +54,13 @@ rocket.IMU.accelNoise = vector3(0.1, 0.1, 0.1)
 rocket.IMU.accelScale = 9.8 * 8
 rocket.IMU.gyroScale = 2000 * DEG_TO_RAD
 
+apogee = False
+
 for motor in settingsLoader.motors:
     # print(motor[0], motor[1])
     rocket.rocket_motor.add_motor(motor[1], motor[0])
 
-rocket.body.mass = rocket.body.dryMass + rocket.rocket_motor.totalMotorMass
+rocket.body.mass = rocket.dry_mass + rocket.rocket_motor.totalMotorMass
 
 # simulation
 
@@ -68,15 +70,20 @@ setup(rocket)
 while True:
 
     rocket.time += dt
-
-    rocket.update()
+    rocket.body.clear()
 
     dataIn = loop(rocket)
-
+    rocket.update()
     rocket.body.clear()
 
     rocket.rocket_motor.ignite(dataIn.motor_fire, rocket.time)
     rocket.tvc_position = dataIn.tvc_position    
+
+    if rocket.body.position.x > 0.1 and rocket.body.velocity.x < 0.0:
+        apogee = True
+
+    if apogee and rocket.body.position.x <= 0.01:
+        break
 
     if rocket.time > simulation_time:
         break
@@ -85,5 +92,17 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 p : plotter = plotter()
 
 p.read_header("data_out.csv")
-p.create_2d_graph(['time', 'ori_x', 'ori_y', 'ori_z', 'ori_x_sensed', 'ori_y_sensed', 'ori_z_sensed'], "time", "various readings (deg)", True)
+
+p.create_2d_graph(['time', 'ori_x', 'ori_y', 'ori_z', 'ori_x_sensed', 'ori_y_sensed', 'ori_z_sensed', 'actuator_out_y', 'actuator_out_z'], "time", "various readings (deg)", True)
+
+p.create_2d_graph(['time', 'vel_x', 'vel_y', 'vel_z', 'vel_x_sensed', 'vel_y_sensed', 'vel_z_sensed'], "time", "velocity (m/s)", True)
+
+p.create_2d_graph(['time', 'pos_x', 'pos_y', 'pos_z', 'pos_x_sensed', 'pos_y_sensed', 'pos_z_sensed'], "time", "position (m)", True)
+
+p.create_2d_graph(['time', 'accel_x', 'accel_y', 'accel_z', 'accel_x_sensed', 'accel_y_sensed', 'accel_z_sensed'], "time", "acceleration (m/s^2)", True)
+
+p.create_2d_graph(['time', 'accel_x_i', 'accel_y_i', 'accel_z_i', 'accel_x_i_sensed', 'accel_y_i_sensed', 'accel_z_i_sensed'], "time", "acceleration (m/s^2)", True)
+
+p.create_3d_graph(['pos_x', 'pos_y', 'pos_z'], 15.0)
+
 p.show_all_graphs()

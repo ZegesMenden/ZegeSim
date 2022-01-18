@@ -1,6 +1,7 @@
 import numpy
 from simulation.physics import *
-from libs.controlMath import * 
+from libs.controlMath import *
+from simulation.motors import * 
 
 class nav:
 
@@ -71,7 +72,7 @@ class nav:
         self.positionInertial.y = self.posKF_y.pos
         self.positionInertial.z = self.posKF_z.pos
 
-        if self.accelerationLocal.x > 10:
+        if self.accelerationLocal.x > 2:
             self.inFlight = True
 
         if self.positionInertial.x <= 0:
@@ -80,6 +81,8 @@ class nav:
         # else:
         #     self.accelerationLocalFiltered = self.accelerationLocal
         #     self.oriRatesFiltered = self.oriRates
+        
+        self.last_acceleration = self.accelerationLocal
     
     def accelOri(self, accel) -> None:
         q = quaternion().from_vector(self.orientation_quat.rotate(accel)) * quaternion(0, 1, 0, 0)
@@ -90,12 +93,12 @@ class nav:
         self.barometerAlt = barometerAlt
         self.barometerVel = barometerVel
         self.barometerTime = time
-        self.posKF_x.update_position(barometerAlt)
+        self.posKF_x.update_position(self.barometerAlt)
 
     def passGPSData(self, gpsData) -> None:
         
         if isinstance(gpsData, vector3):
-            self.posKF_x.update_position(gpsData.x)
+            # self.posKF_x.update_position(gpsData.x)
             self.posKF_y.update_position(gpsData.y)
             self.posKF_z.update_position(gpsData.z)
     

@@ -341,6 +341,10 @@ class quaternion:
     def quaternion_to_euler(self) -> vector3:
         """Convert a quaternion to euler angles."""
 
+        # x = np.arctan2(2.0*self.y*self.w-2.0*self.x*self.z, 1.0-2.0*self.y*self.y-2.0*self.z*self.z)
+        # y = np.arcsin(2.0*self.x*self.y+2.0*self.z*self.w)
+        # z = np.arctan2(2.0*self.x*self.w-2.0*self.y*self.z, 1.0-2.0*self.x*self.x-2.0*self.z*self.z)
+
         x = np.arctan2(2.0 * (self.w * self.x + self.y * self.z),
                        1.0 - 2.0 * (self.x**2 + self.y**2))
         y = np.arcsin(2.0 * (self.w * self.y - self.z * self.x))
@@ -561,7 +565,8 @@ class physics_body:
             force to apply
         """
 
-        torque: vector3 = point.cross(force)
+        torque: vector3 = force * point.x
+        torque.x = 0.0
         self.add_torque(torque)
 
         self.add_force(force)
@@ -582,7 +587,7 @@ class physics_body:
             nf: vector3 = self.rotation.rotate(force)
             np: vector3 = self.rotation.rotate(point)
 
-            self.add_global_point_force(nf, np)
+            self.add_global_point_force(nf, point)
 
     def update_aero(self):
 
@@ -616,15 +621,14 @@ class physics_body:
         self.velocity += self.acceleration * dt
         self.position += self.velocity * dt
 
-        self.rotational_acceleration *= dt
-        self.rotational_velocity += self.rotational_acceleration
+        self.rotational_velocity += self.rotational_acceleration * dt
 
         ang = self.rotational_velocity.norm()
 
         if ang == 0.0:
             ang = 0.000000001
 
-        self.rotation *= quaternion().from_axis_angle(self.rotational_velocity / ang, ang * dt)
+        self.rotation *= quaternion(0.0, 0.0, 0.0, 0.0).from_axis_angle(self.rotational_velocity / ang, ang * dt)
 
         self.rotation_euler = self.rotation.quaternion_to_euler()
 
@@ -643,4 +647,4 @@ class physics_body:
         """clears the rotational and translational acceleration"""
 
         self.acceleration = vector3(0.0, 0.0, 0.0)
-        self.rotational_acceleration = vector3()
+        self.rotational_acceleration = vector3(0.0, 0.0, 0.0)

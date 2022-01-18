@@ -24,7 +24,9 @@ class rocketBody:
         self.tvc_location : vector3 = vector3()
         self.reaction_wheel_torque: float = 0.0
 
-        self.rocket_motor: rocketMotor = rocketMotor(0)
+        self.rocket_motor: rocketMotor = rocketMotor(1000)
+        self.cp_locaoation: vector3 = vector3()
+        self.dry_mass: float = 1.0
 
         self.tvc: TVC = TVC()
 
@@ -43,10 +45,12 @@ class rocketBody:
         self.tvc.actuate(self.tvc_position, self.time_step)
 
         self.tvc.calculate_forces(self.rocket_motor.currentThrust)
-        self.body.add_local_point_force(self.tvc.force, self.tvc_location)
+        self.body.add_force_local(self.tvc.force)
+        self.body.add_torque_local(vector3(0.0, self.tvc.force.y, self.tvc.force.z) * self.tvc_location.x)
         
-        # self.body.update_aero()
-        # self.body.add_global_point_force(self.body.drag_force, self.body.cp_location)
+        self.body.update_aero()
+        self.body.add_force(self.body.drag_force)
+        self.body.add_torque(vector3(0.0, self.body.drag_force.y, self.body.drag_force.z) * -0.4)
         self.body.update(self.time_step)
 
     def clear(self):

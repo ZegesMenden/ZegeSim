@@ -31,8 +31,8 @@ flight_path: flightPath = flightPath()
 global setpoint
 setpoint: vector3 = vector3()
 
-FSF_pitch: FSF = FSF(3.16227766, 1.97902394)
-FSF_yaw: FSF = FSF(3.16227766, 1.97902394)
+FSF_pitch: FSF = FSF(7, 1.2)
+FSF_yaw: FSF = FSF(7, 1.2)
 
 tvc_command: vector3 = vector3()
 

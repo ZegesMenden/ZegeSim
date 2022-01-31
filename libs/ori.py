@@ -1,4 +1,5 @@
 import numpy
+from zmq import EVENT_ACCEPT_FAILED
 from simulation.physics import *
 from libs.controlMath import *
 from simulation.motors import * 
@@ -113,3 +114,16 @@ class nav:
             self.accelBias /= self.debiasCount
             self.gyroscopeBias /= self.debiasCount
             self.debiased = True
+            
+class orientation:
+    
+    def __init__(self):
+        
+        self.rotation_quaternion: quaternion = quaternion()
+        self.rotaiton_euler: vector3 = vector3()
+        
+    def update(self, rotational_velocity: vector3, dt: float) -> None:
+        
+        ang = rotational_velocity.norm()
+        self.rotation_quaternion *= quaternion().from_axis_angle(rotational_velocity / ang, ang * dt)
+        self.rotaiton_euler = self.rotation_quaternion.quaternion_to_euler()

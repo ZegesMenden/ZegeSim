@@ -40,6 +40,8 @@ class rocketBody:
         return self.time * 1000000
 
     def update(self):
+        
+        self.body.mass = self.dry_mass + self.rocket_motor.totalMotorMass
 
         self.rocket_motor.update(self.time)
         self.tvc.actuate(self.tvc_position, self.time_step)
@@ -50,7 +52,7 @@ class rocketBody:
         
         self.body.update_aero()
         self.body.add_force(self.body.drag_force)
-        self.body.add_torque(vector3(0.0, self.body.drag_force.y, self.body.drag_force.z) * -0.4)
+        self.body.add_torque(vector3(0.0, self.body.drag_force.y, self.body.drag_force.z) * -0.15)
         self.body.update(self.time_step)
 
     def clear(self):

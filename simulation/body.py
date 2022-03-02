@@ -24,7 +24,7 @@ class rocketBody:
         self.tvc_location : vector3 = vector3()
         self.reaction_wheel_torque: float = 0.0
 
-        self.rocket_motor: rocketMotor = rocketMotor(1000)
+        self.rocket_motor: rocket_motor = rocket_motor(1000)
         self.cp_locaoation: vector3 = vector3()
         self.dry_mass: float = 1.0
 
@@ -41,19 +41,23 @@ class rocketBody:
 
     def update(self):
         
-        self.body.mass = self.dry_mass + self.rocket_motor.totalMotorMass
+        self.body.mass = self.dry_mass + (self.rocket_motor.current_mass*0.001)
 
         self.rocket_motor.update(self.time)
         self.tvc.actuate(self.tvc_position, self.time_step)
 
-        self.tvc.calculate_forces(self.rocket_motor.currentThrust)
+        self.tvc.calculate_forces(self.rocket_motor.current_thrust)
         self.body.add_force_local(self.tvc.force)
         self.body.add_torque_local(vector3(0.0, self.tvc.force.y, self.tvc.force.z) * self.tvc_location.x)
         
         self.body.update_aero()
         self.body.add_force(self.body.drag_force)
-        self.body.add_torque(vector3(0.0, self.body.drag_force.y, self.body.drag_force.z) * -0.15)
+        self.body.add_torque(self.cp_locaoation.cross(self.body.drag_force))
+        self.body.add_torque(self.body.rotational_velocity * -0.001)
         self.body.update(self.time_step)
+        
+        # self.body.rotation_euler *= 0.95
+        # self.body.rotation = self.body.rotation.euler_to_quaternion(self.body.rotation_euler)
 
     def clear(self):
         self.body.clear()

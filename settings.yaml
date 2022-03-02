@@ -1,11 +1,18 @@
 settings:
-  
+
   timeStep: 1000.0
-  simTime: 15.0
+  simTime: 180.0
+
+  # motor types:
+
+  # motors/AeroTech_H13ST.rse
+  # motors/Apogee_F10.rse
+  # motors/Estes_F15.rse
+  # motors/Estes_E12.rse
+  
 
   motors: {
-    "ascent": "e12",
-    "descent": "e12",
+    "ascent" : "motors/Estes_E12.rse"
   }
 
   max_motor_ignition_delay: 0.78
@@ -15,21 +22,24 @@ settings:
   gpsSpeed: 10
   baroSpeed: 40
 
-  rocket_mass: 0.81
+  rocket_mass: 0.8
 
-  mmoi: [0.0502, 0.0548202733120976, 0.0548202733120976]
+  mmoi: [0.0502, 0.0502, 0.0502]
 
   cp_location: [-0.4, 0.0, 0.0]
-  tvc_location: [0.4, 0.0, 0.0]
-  
-  drag_area: 0.05
-  drag_coeff: 0.5
+  tvc_location: [0.454, 0.0, 0.0]
 
-  wind_speed: [0.0, 0.0, 0.0]
+  drag_area_sideways: 0.283
+  drag_area_nose: 0.026
+  drag_coeff: 0.55
+
+  wind_speed: [0.0, 0.05, 0.1]
 
   # y and z
-  max_tvc_angle: [15.0, 15.0]
+  max_tvc_angle: [6.0, 6.0]
   tvc_noise: 0.0
 
-  tvc_servo_speed: 999
+  tvc_servo_speed: 250
   tvc_linkage_ratio: 4
+
+  real_time: False

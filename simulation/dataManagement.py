@@ -218,7 +218,8 @@ class settingsParser:
         self.mass: float = 0.0
         self.mmoi: vector3 = vector3()
 
-        self.drag_area: float = 0.0
+        self.drag_area_nose: float = 0.0
+        self.drag_area_sideways: float = 0.0
         self.drag_coeff: float = 0.0
 
         self.wind_speed: vector3 = vector3()
@@ -244,6 +245,7 @@ class settingsParser:
         config = settings["settings"]
 
         for point in config["motors"]:
+            print(point, config["motors"][point])
             self.motors.append([point, config["motors"][point]])
 
         self.time_step = float(config["timeStep"])
@@ -257,7 +259,8 @@ class settingsParser:
         self.max_ignition_delay = float(config["max_motor_ignition_delay"])
 
         self.mass = float(config["rocket_mass"])
-        self.drag_area = float(config["drag_area"])
+        self.drag_area_nose = float(config["drag_area_nose"])
+        self.drag_area_sideways = float(config["drag_area_sideways"])
         self.drag_coeff = float(config["drag_coeff"])
         self.tvc_noise = float(config["tvc_noise"])
         self.tvc_servo_speed = float(config["tvc_servo_speed"])
@@ -273,8 +276,9 @@ class settingsParser:
         self.tvc_location = vector3(float(config["tvc_location"][0]), float(
             config["tvc_location"][1]), float(config["tvc_location"][2]))
         
-        self.cp_location = vector3(float(config["cp_location"][0]), float(
-            config["cp_location"][1]), float(config["cp_location"][2]))
+        self.cp_location = vector3(float(config["cp_location"][0]), float(config["cp_location"][1]), float(config["cp_location"][2]))
+        
+
         # print(self.motors)
         # print(self.time_step)
         # print(self.simulation_time)

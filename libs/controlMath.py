@@ -123,57 +123,55 @@ class FSF:
     def getOutput(self):
         return self.output
 
-
 class kalman:
-
-    def __init__(self) -> None:
-
-        self.P = [0.0, 0.0, 0.0, 0.0]
-        self.vel = 0.0
-        self.pos = 0.0
-
-        self.Q = 0.0
-        self.R = 0.0
-
-    def update_accel(self, accel, dt) -> None:
-
-        self.pos += self.vel * dt + 0.5 * accel * (dt * dt)
-        self.vel += accel * dt
+    
+    def __init__(self):
         
-        q_dtdt = self.Q * (dt * dt)
-        self.P[0] += (self.P[2] + self.P[1] +
-                      (self.P[3] + q_dtdt * 0.25) * dt) * dt
-        self.P[1] += (self.P[3] + q_dtdt * 0.5) * dt
-        self.P[2] = self.P[1]
-        self.P[3] += q_dtdt
+        self.Xk = np.array([[0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0]])
+        
+        self.Pk = np.array([[0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0]])
 
-    def update_position(self, pos) -> None:
+        self.Qk = np.array([[0.25, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 5.0]])
 
-        y = self.pos - pos
+        self.Hk = np.array([[1.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 1.0]])
 
-        inv = 1.0 / (self.P[0] + self.R)
+        self.Rk = np.array([[15.0, 0.0, 0.0],
+                            [0.0, 5.0, 0.0],
+                            [0.0, 0.0, 0.25]])
+        
+        self.K = np.array([[0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0]])
+        
+    def sFk(self, dt):
+        self.Fk = np.array([[1.0, dt, (dt ** 2)/2],
+                         [0.0, 1.0,     dt],
+                         [0.0, 0.0,     1.0]])
+        
+    def get_kalman_gain(self):
+        self.K = self.Pk * np.transpose(self.Hk) * np.linalg.inv(self.Hk * self.Pk * np.transpose(self.Hk) + self.Rk)
 
-        K_a = self.P[0] * inv
-        K_b = self.P[2] * inv
+    def update_measurement(self, Zk):
+        self.Xk = self.Fk * self.Xk + self.K * (Zk - self.Hk * self.Xk)
+        self.Pk = self.Pk - (self.K * self.Hk * self.Pk)
 
-        self.pos += K_a * y
-        self.vel += K_b * self.vel
+    def propogate(self, sens, dt):
+        B = np.array([[(dt ** 2)/2],
+                  [dt],
+                  [1]])
+        self.Xk = self.Fk * self.Xk + B*sens
+        self.Pk = self.Fk * self.Pk * np.transpose(self.Fk) + self.Qk
+        
+    def get_position(self):
+        return self.Xk.item([0][0])
 
-        self.vel += y*10
-        self.vel /= 11.0
-
-        self.pos += pos
-        self.pos /= 2.0
-
-        self.P[0] -= K_a * self.P[0]
-        self.P[1] -= K_a * self.P[1]
-        self.P[2] -= K_b * self.P[0]
-        self.P[3] -= K_b * self.P[1]
-
-    def get_position(self) -> float:
-
-        return self.pos
-
-    def get_velocity(self) -> float:
-
-        return self.vel
+    def get_velocity(self):
+        return self.Xk.item([1][0])

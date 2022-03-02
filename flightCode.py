@@ -1,6 +1,3 @@
-# simulation libraries
-
-from subprocess import getoutput
 from simulation.physics import *
 from simulation.dataManagement import *
 from simulation.motors import *
@@ -31,8 +28,8 @@ setpoint: vector3 = vector3()
 FSF_pitch: FSF = FSF(6, 4.5)
 FSF_yaw: FSF = FSF(6, 4.5)
 
-FSF_position_y: FSF = FSF(2.41421356, 6.68003008)
-FSF_position_z: FSF = FSF(2.41421356, 6.68003008)
+FSF_position_y: FSF = FSF(7.07106781, 11.93404191)
+FSF_position_z: FSF = FSF(7.07106781, 11.93404191)
 
 tvc_command: vector3 = vector3()
 
@@ -45,24 +42,16 @@ motor_is_lit = False
 global motor_light_time
 motor_light_time = 0.0
 
+KF_x: kalman = kalman()
+KF_y: kalman = kalman()
+KF_z: kalman = kalman()
+
 global velocity
 global position
 position: vector3 = vector3()
 velocity: vector3 = vector3()
 
 acceleration_inertial: vector3 = vector3()
-
-KF_position_x: simpleKF = simpleKF()
-KF_position_y: simpleKF = simpleKF()
-KF_position_z: simpleKF = simpleKF()
-
-KF_position_x.process_noise = 0.05
-KF_position_y.process_noise = 0.05
-KF_position_z.process_noise = 0.05
-
-KF_position_x.measurement_noise = 0.15
-KF_position_y.measurement_noise = 0.15
-KF_position_z.measurement_noise = 0.15
 
 last_position: vector3 = vector3()
 
@@ -72,7 +61,8 @@ global apogee
 apogee = False
 
 global impulse_c6
-impulse_c6 = 27.2 # newton-seconds
+# impulse_c6 = 27.2 # newton-seconds
+impulse_c6 = 74.3
 
 def angle_from_desired_accel(thrust, mass, target_accel):
     return np.arcsin(target_accel/(thrust/mass))
@@ -92,7 +82,7 @@ lastTVC: float = 0.0
 tvcDT: float = 1 / 100.0
 
 lastDatalog: float = 0.0
-dataLogDelay: float = 1 / 100.0
+dataLogDelay: float = 1 / 40.0
 
 DL: dataLogger = dataLogger()
 
@@ -166,6 +156,8 @@ def init_data():
     DL.addDataPoint("setpoint_y")
     DL.addDataPoint("setpoint_z")
 
+    DL.addDataPoint("AOA")
+
     DL.addDataPoint("thrust")
     DL.initCSV(True, True)
     
@@ -189,6 +181,8 @@ def init_data1():
     DL.addDataPoint("pos_y")
     DL.addDataPoint("pos_z")
 
+    DL.addDataPoint("thrust")
+
     DL.initCSV(True, True)
 
 def record_data1(rocket: rocketBody) -> None:
@@ -198,7 +192,8 @@ def record_data1(rocket: rocketBody) -> None:
     
     dStr.replace('-', '/')
     
-    DL.recordVariable("time", f"{dStr}")
+    # DL.recordVariable("time", f"{dStr}")
+    DL.recordVariable("time", rocket.time)
 
     DL.recordVariable("ori_x", rocket.body.rotation_euler.x * RAD_TO_DEG)
     DL.recordVariable("ori_y", rocket.body.rotation_euler.y * RAD_TO_DEG)
@@ -215,6 +210,8 @@ def record_data1(rocket: rocketBody) -> None:
     DL.recordVariable("pos_x", rocket.body.position.x)
     DL.recordVariable("pos_y", rocket.body.position.y)
     DL.recordVariable("pos_z", rocket.body.position.z)
+
+    DL.recordVariable("thrust", rocket.rocket_motor.current_thrust)
 
     DL.saveData(True)
 
@@ -290,7 +287,12 @@ def record_data(rocket: rocketBody) -> None:
     DL.recordVariable("setpoint_y", setpoint.y * RAD_TO_DEG)
     DL.recordVariable("setpoint_z", setpoint.z * RAD_TO_DEG)
 
-    DL.recordVariable("thrust", rocket.rocket_motor.currentThrust)
+    if ( rocket.body.position.x > 0.1):
+        DL.recordVariable("AOA", rocket.body.aoa * RAD_TO_DEG)
+    else:
+        DL.recordVariable("AOA", 0.0)
+
+    DL.recordVariable("thrust", rocket.rocket_motor.current_thrust)
 
     DL.saveData(True)
 
@@ -307,6 +309,24 @@ def read_imu(rocket: rocketBody) -> None:
 
     acceleration_inertial = ori.rotation_quaternion.rotate(rocket.IMU.accel)
     acceleration_inertial.x -= 9.8
+    
+    acceleration_inertial *= rocket.time_step*2
+
+    KF_x.sFk(rocket.time_step*2)
+    KF_y.sFk(rocket.time_step*2)
+    KF_z.sFk(rocket.time_step*2)
+
+    KF_x.propogate(acceleration_inertial.x, rocket.time_step*2)
+    KF_y.propogate(acceleration_inertial.y, rocket.time_step*2)
+    KF_z.propogate(acceleration_inertial.z, rocket.time_step*2)
+    
+    # position.x = KF_x.get_position()
+    # position.y = KF_y.get_position()
+    # position.z = KF_z.get_position()
+    
+    # velocity.x = KF_x.get_velocity()
+    # velocity.y = KF_y.get_velocity()
+    # velocity.z = KF_z.get_velocity()
     
     position = rocket.body.position
     velocity = rocket.body.velocity
@@ -325,6 +345,37 @@ def read_gps(rocket: rocketBody) -> None:
 
     rocket.gps.update(rocket.body.position, rocket.body.velocity,
                       rocket.time_step, rocket.time)
+    
+    Zx = np.matrix([[rocket.gps.measuredPosition.x],
+                   [rocket.gps.measuredVelocity.x],
+                   [0.0]])
+    
+    KF_x.sFk(gpsDT)
+    
+    KF_x.get_kalman_gain()
+    KF_x.update_measurement(Zx)
+    KF_x.propogate(0.0, gpsDT)
+    
+    Zy = np.matrix([[rocket.gps.measuredPosition.y],
+                   [rocket.gps.measuredVelocity.y],
+                   [0.0]])
+    
+    KF_y.sFk(gpsDT)
+    
+    KF_y.get_kalman_gain()
+    KF_y.update_measurement(Zy)
+    KF_y.propogate(0.0, gpsDT)
+    
+    Zz = np.matrix([[rocket.gps.measuredPosition.z],
+                   [rocket.gps.measuredVelocity.z],
+                   [0.0]])
+    
+    KF_z.sFk(gpsDT)
+    
+    KF_z.get_kalman_gain()
+    KF_z.update_measurement(Zz)
+    KF_z.propogate(0.0, gpsDT)
+vel_at_burn_start_real = vector3()
 
 def TVC_update(rocket: rocketBody) -> None:
     global apogee
@@ -335,42 +386,51 @@ def TVC_update(rocket: rocketBody) -> None:
     
     if velocity.x < 0.0 and position.x > 1.0 and apogee == False:
         apogee = True
-        rocket.dry_mass -= 0.025
+        # rocket.body.drag_area = 0.01
+        rocket.cp_locaoation = vector3(-0.8, 0.0, 0.0)
+        # rocket.dry_mass -= 0.2
         
-    velocity_at_burn = vector3(abs(velocity.x) + (8.9*0.78), velocity.y, velocity.z).norm()
+    velocity_at_burn = vector3(abs(velocity.x) + (5.68*0.78), velocity.y, velocity.z).norm()
     momentum_at_burn = velocity_at_burn * rocket.body.mass
     
     # print(rocket.body.mass)
     
-    work_g = (velocity_at_burn*2.4 - ( 0.5 * ((10.5/rocket.body.mass)-8.9)) * (2.4**2))
-    if abs(work_g) > position.x  and apogee:
-        rocket.rocket_motor.ignite("descent", rocket.time)
+    work_g = (velocity_at_burn*7.02 - ( 0.5 * ((10.9/rocket.body.mass)-5.68)) * (7.02**2))
+
+    # if position.x - abs(work_g) <= 0.5 and apogee:
+    #     rocket.rocket_motor.light_motor("descent", rocket.time)
     effective_i = impulse_c6-work_g
     
-    if effective_i < momentum_at_burn and apogee:
-        rocket.rocket_motor.ignite("descent", rocket.time)
+    # if effective_i < momentum_at_burn and apogee and rocket.rocket_motor.current_thrust < 0.01:
+        # vel_at_burn_start_real = rocket.body.velocity
+        # rocket.rocket_motor.light_motor("descent", rocket.time)
         # print(rocket.time)
 
-    if rocket.time > 1:
-        setpoint = flight_path.getCurrentSetpoint(rocket.time) * DEG_TO_RAD
+
+
+    # if rocket.time > 1:
+    #     setpoint = flight_path.getCurrentSetpoint(rocket.time) * DEG_TO_RAD
     # if rocket.time > 4:
-        
-    #     FSF_position_y.compute(rocket.body.position.y, rocket.body.velocity.y)
-    #     FSF_position_z.compute(rocket.body.position.z, rocket.body.velocity.z)
-    #     if rocket.rocket_motor.currentThrust > 0.1:
-    #         setpoint.y = -angle_from_desired_accel(rocket.rocket_motor.currentThrust, rocket.body.mass, clamp(FSF_position_z.getOutput(), -0.5, 0.5))
-    #         setpoint.z = angle_from_desired_accel(rocket.rocket_motor.currentThrust, rocket.body.mass, clamp(FSF_position_y.getOutput(), -0.5, 0.5))
+    if rocket.time > 6:
+        FSF_position_y.setpoint = 1.0
+    if rocket.time > 12:
+        FSF_position_y.setpoint = 2.5
+    FSF_position_y.compute(rocket.body.position.y, rocket.body.velocity.y)
+    FSF_position_z.compute(rocket.body.position.z, rocket.body.velocity.z)
+    if rocket.rocket_motor.current_thrust > 0.1:
+        setpoint.y = -angle_from_desired_accel(rocket.rocket_motor.current_thrust, rocket.body.mass, clamp(FSF_position_z.getOutput(), -5, 5))
+        setpoint.z = angle_from_desired_accel(rocket.rocket_motor.current_thrust, rocket.body.mass, clamp(FSF_position_y.getOutput(), -5, 5))
     #     if rocket.body.position.x < 6.0:
     #         setpoint.y = 0.0
     #         setpoint.z = 0.0
     FSF_pitch.setpoint = setpoint.y
     FSF_yaw.setpoint = setpoint.z
 
-    FSF_pitch.compute(ori.rotaiton_euler.y, rocket.IMU.oriRates.y)
-    FSF_yaw.compute(ori.rotaiton_euler.z, rocket.IMU.oriRates.z)
+    FSF_pitch.compute(rocket.body.rotation_euler.y, rocket.IMU.oriRates.y)
+    FSF_yaw.compute(rocket.body.rotation_euler.z, rocket.IMU.oriRates.z)
 
-    TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
-    TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.currentThrust, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
+    TVC_y = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.current_thrust, rocket.body.moment_of_inertia.y, FSF_pitch.getOutput())
+    TVC_z = calculateAngleFromDesiredTorque(rocket.tvc_location.x, rocket.rocket_motor.current_thrust, rocket.body.moment_of_inertia.z, FSF_yaw.getOutput())
 
     cr = math.cos(-rocket.body.rotation_euler.x)
     sr = math.sin(-rocket.body.rotation_euler.x)
@@ -395,7 +455,7 @@ def setup(rocket: rocketBody) -> None:
     plotter.allDataDescriptions = data_list
     DL.fileName = "../data_out.csv"
 
-    init_data1()
+    init_data()
     
     flight_path.loadFlightPath('../flight_path.csv')
 
@@ -420,7 +480,6 @@ def loop(rocket: rocketBody) -> control_data:
         lastBaroRead = rocket.time
 
     if rocket.time > lastGPSRead + gpsDT:
-
         read_gps(rocket)
         lastGPSRead = rocket.time
 
@@ -433,7 +492,7 @@ def loop(rocket: rocketBody) -> control_data:
 
     if rocket.time > lastDatalog + dataLogDelay:
 
-        record_data1(rocket)
+        record_data(rocket)
 
         lastDatalog = rocket.time
         

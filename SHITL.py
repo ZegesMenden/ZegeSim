@@ -1,5 +1,7 @@
 # simulation libraries
 
+
+from matplotlib.style import available
 from simulation.physics import *
 from simulation.dataManagement import *
 from simulation.motors import *
@@ -19,15 +21,21 @@ from datetime import datetime
 import serial
 
 with serial.Serial() as ser:
-    ser.baudrate = 19200
+    ser.baudrate = 115200
     ser.port = 'COM4'
     ser.open()
-    ser.write(b'hello')
-    
-def setup(rocket: rocketBody):
-    pass
+    ser.timeout=0.5
+ser.open()
+while True:
+    # print(ser.readline())
+    if "a" in str(ser.readline()):
+        print("header recieved")
 
-def loop(rocket: rocketBody) -> control_data:
+        buf = []
+        buf = ser.read(32)
+        print(str(len(buf)))
+        print(buf)
+# def loop(rocket: rocketBody) -> control_data:
     
-    cd: control_data = control_data()
-    return cd
+#     cd: control_data = control_data()
+#     return cd

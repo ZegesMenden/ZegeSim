@@ -6,8 +6,6 @@ DEG_TO_RAD = np.pi / 180.0
 RAD_TO_DEG = 180 / np.pi
 
 # ty orlando <3
-
-
 def clamp(n, minn, maxn):  # Clamps output to a range
     return max(min(maxn, n), minn)
 
@@ -397,12 +395,12 @@ class TVC:
 
         self.command.y = command_angles.y * RAD_TO_DEG * self.linkage_ratio
         self.command.z = command_angles.z * RAD_TO_DEG * self.linkage_ratio
-        
+
         actuation_y = clamp(
             self.command.y - self.servo_position.y, -self.servo_speed, self.servo_speed)
         actuation_z = clamp(
             self.command.z - self.servo_position.z, -self.servo_speed, self.servo_speed)
-        
+
         self.servo_position.y += actuation_y * dt
         self.servo_position.z += actuation_z * dt
 
@@ -481,7 +479,7 @@ class physics_body:
     def __init__(self, position: vector3 = vector3(), velocity: vector3 = vector3(), acceleration: vector3 = vector3(), gravity: vector3 = vector3(),
                  mass: float = 0.0, moment_of_inertia: vector3 = vector3(), floor: bool = True, rotation: quaternion = quaternion(), rotational_velocity: vector3 = vector3(),
                  rotational_acceleration: vector3 = vector3(), acceleration_local: vector3() = vector3(), rotational_velocity_local: vector3() = vector3(), rotation_euler: vector3 = vector3(),
-                 wind: vector3 = vector3(), drag_force: vector3 = vector3(), drag_area: float = 0.0, drag_coefficient: float = 0.0) -> None:
+                 wind: vector3 = vector3(), drag_force: vector3 = vector3(), drag_area_nose: float = 0.0, drag_area_sideways: float = 0.0, drag_coefficient: float = 0.0) -> None:
         """Initialize the physics body."""
 
         self.position = position
@@ -500,8 +498,11 @@ class physics_body:
 
         self.wind = wind
         self.drag_force = drag_force
-        self.drag_area = drag_area
+        self.drag_area_nose = drag_area_nose
+        self.drag_area_sideways = drag_area_sideways
         self.drag_coefficient = drag_coefficient
+
+        self.aoa = 0.0
 
         pass
 
@@ -524,7 +525,7 @@ class physics_body:
         torque : vector3
             torque to add
         """
-        
+
         self.rotational_acceleration += torque / self.moment_of_inertia
 
     def add_force_local(self, force: vector3) -> None:
@@ -590,9 +591,8 @@ class physics_body:
             self.add_global_point_force(nf, point)
 
     def update_aero(self):
-
         """Updates aerodynamic forces acting on the body.
-        
+
         Note - you still need to apply the drag force to the physics body with apply_glocal_point_force()."""
 
         velocity_relative_wind: vector3 = self.velocity - self.wind_speed
@@ -602,14 +602,24 @@ class physics_body:
             self.aoa = velocity_relative_wind.angle_between_vectors(
                 self.rotation.rotate(vector3(1.0, 0.0, 0.0)))
 
+            if (self.aoa > 1.5708):
+               self.aoa = np.pi - self.aoa
+
+            # print(self.aoa)
+
             dc = self.drag_coefficient * self.aoa
 
             if self.floor == True and self.position.x != 0.0:
-                self.drag_force = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
+                self.drag_force: vector3 = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
                     (self.velocity.norm() ** 2) * dc * self.drag_area
+
             elif self.floor == False:
-                self.drag_force = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
+                self.drag_force: vector3= -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
                     (self.velocity.norm() ** 2) * dc * self.drag_area
+            
+            else:
+                self.drag_force: vector3 = vector3()
+            self.add_torque(self.rotational_velocity * -0.01)
 
     def update(self, dt: float) -> None:
         """Updates the physics body"""
@@ -618,8 +628,14 @@ class physics_body:
 
         self.acceleration += self.gravity
 
+        # euler integration
+        # self.velocity += self.acceleration * dt
+        # self.position += self.velocity * dt
+
+        # verlet integration
+        self.position += self.velocity * dt + ((self.acceleration/2.0) * (dt ** 2))
         self.velocity += self.acceleration * dt
-        self.position += self.velocity * dt
+        
 
         self.rotational_velocity += self.rotational_acceleration * dt
 
@@ -628,20 +644,18 @@ class physics_body:
         if ang == 0.0:
             ang = 0.000000001
 
-        self.rotation *= quaternion(0.0, 0.0, 0.0, 0.0).from_axis_angle(self.rotational_velocity / ang, ang * dt)
+        self.rotation *= quaternion(0.0, 0.0, 0.0, 0.0).from_axis_angle(
+            self.rotational_velocity / ang, ang * dt)
 
         self.rotation_euler = self.rotation.quaternion_to_euler()
 
         self.rotational_velocity_local = self.rotation.conj().rotate(self.rotational_velocity)
 
-        # self.rotation_euler.x = 0.0
-        # self.rotational_velocity.x = 0.0
-        # self.rotation = quaternion().euler_to_quaternion(self.rotation_euler)
-
         if self.floor and self.position.x <= 0.0:
 
             self.position.x = 0.0
-            self.velocity.x = 0.0
+            self.velocity = vector3(0.0, 0.0, 0.0)
+            self.rotational_velocity = vector3(0.0, 0.0, 0.0)
 
     def clear(self) -> None:
         """clears the rotational and translational acceleration"""

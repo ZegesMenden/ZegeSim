@@ -9,10 +9,12 @@ settings:
   # motors/Apogee_F10.rse
   # motors/Estes_F15.rse
   # motors/Estes_E12.rse
+  # motors/Estes_D12.rse
+  # motors/Estes_C6.rse
   
 
   motors: {
-    "ascent" : "motors/Estes_E12.rse"
+    "ascent" : "motors/Estes_D12.rse"
   }
 
   max_motor_ignition_delay: 0.78

@@ -229,7 +229,7 @@ class test_physics_body(unittest.TestCase):
         time = 0.0        
         body.rotation = quaternion().euler_to_quaternion(vector3(0.0, 0.0, 0.0))
         
-        while time < 1.0:
+        while time < 1:
             
             body.add_local_point_force(vector3(1.0, 0.0, 0.0), vector3(1.0, 0.0, 0.0))
             body.update(0.0001)
@@ -242,20 +242,20 @@ class test_physics_body(unittest.TestCase):
 
         self.assertAlmostEqual(body.position.x, 0.5, 3)
         
-        while time < 2.0:
+        while time <= 2.02:
                 
             body.add_local_point_force(vector3(0.0, 1.0, 0.0), vector3(1.0, 0.0, 0.0))
             body.update(0.0001)
             body.clear()
             time += 0.0001
 
-        self.assertAlmostEqual(body.rotational_velocity.x, 0.0, 3)
-        self.assertAlmostEqual(body.rotational_velocity.y, 0.0, 3) 
-        self.assertAlmostEqual(body.rotational_velocity.z, 1.0, 3)
+        self.assertAlmostEqual(body.rotational_velocity.x, 0.0, 1)
+        self.assertAlmostEqual(body.rotational_velocity.y, 1.0, 1) 
+        self.assertAlmostEqual(body.rotational_velocity.z, 0.0, 1)
 
-        self.assertAlmostEqual(body.rotation_euler.x, 0.0, 3)
-        self.assertAlmostEqual(body.rotation_euler.y, 0.0, 3) 
-        self.assertAlmostEqual(body.rotation_euler.z, 0.5, 3)
+        self.assertAlmostEqual(body.rotation_euler.x, 0.0, 1)
+        self.assertAlmostEqual(body.rotation_euler.y, 0.5, 1) 
+        self.assertAlmostEqual(body.rotation_euler.z, 0.0, 1)
 
         while time < 3.0:
                 

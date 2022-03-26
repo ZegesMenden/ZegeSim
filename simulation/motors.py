@@ -65,7 +65,7 @@ class rocket_motor:
     def light_motor(self, motor_name, time):
         if motor_name in self.motors:
             if self.motors[motor_name]["is_lit"] == False:
-                self.motors[motor_name]["ignition_time"] = int(time * self.time_step)
+                self.motors[motor_name]["ignition_time"] = int(time * self.time_step + 0.78)
                 self.motors[motor_name]["is_lit"] = True
     
     def update(self, time):

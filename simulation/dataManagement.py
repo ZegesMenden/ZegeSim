@@ -65,6 +65,7 @@ class dataLogger:
 
             f = open(str(self.fileName), "r")
 
+            # if the file is empty?
             if not f.read():
                 f.close()
 
@@ -77,6 +78,7 @@ class dataLogger:
                 f.write(outString[0:-1])
 
                 f.write('\n')
+                f.close()
             else:
                 if overWrite == True:
                     f.close()
@@ -96,7 +98,14 @@ class dataLogger:
         else:
             if makeFile == True:
                 f = open(str(self.fileName), "w")
+                outString = ""
+                for varName in self.variableDescriptions:
+                    outString += varName
+                    outString += ","
 
+                f.write(outString[0:-1])
+
+                f.write('\n')
                 f.close()
             else:
                 raise OSError("csv file not found!")
@@ -221,6 +230,7 @@ class settingsParser:
         self.drag_area_nose: float = 0.0
         self.drag_area_sideways: float = 0.0
         self.drag_coeff: float = 0.0
+        self.drag_coeff_sideways: float = 0.0
 
         self.wind_speed: vector3 = vector3()
 
@@ -245,7 +255,7 @@ class settingsParser:
         config = settings["settings"]
 
         for point in config["motors"]:
-            print(point, config["motors"][point])
+            # print(point, config["motors"][point])
             self.motors.append([point, config["motors"][point]])
 
         self.time_step = float(config["timeStep"])
@@ -262,6 +272,8 @@ class settingsParser:
         self.drag_area_nose = float(config["drag_area_nose"])
         self.drag_area_sideways = float(config["drag_area_sideways"])
         self.drag_coeff = float(config["drag_coeff"])
+        self.drag_coeff_sideways = float(config["drag_coeff_sideways"])
+        
         self.tvc_noise = float(config["tvc_noise"])
         self.tvc_servo_speed = float(config["tvc_servo_speed"])
         self.linkage_ratio = float(config["tvc_linkage_ratio"])

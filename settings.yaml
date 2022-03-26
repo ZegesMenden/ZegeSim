@@ -14,7 +14,7 @@ settings:
   
 
   motors: {
-    "ascent" : "motors/Estes_D12.rse"
+    "ascent" : "motors/Estes_F15.rse"
   }
 
   max_motor_ignition_delay: 0.78
@@ -24,22 +24,23 @@ settings:
   gpsSpeed: 10
   baroSpeed: 40
 
-  rocket_mass: 0.8
+  rocket_mass: 1
 
   mmoi: [0.0502, 0.0502, 0.0502]
 
-  cp_location: [-0.4, 0.0, 0.0]
-  tvc_location: [0.454, 0.0, 0.0]
+  cp_location: [-0.1, 0.0, 0.0]
+  tvc_location: [0.4, 0.0, 0.0]
 
-  drag_area_sideways: 0.283
-  drag_area_nose: 0.026
-  drag_coeff: 0.55
+  drag_area_sideways: 0.2
+  drag_area_nose: 0.015
+  drag_coeff: 0.1
+  drag_coeff_sideways: 0.25
 
   wind_speed: [0.0, 0.05, 0.1]
 
   # y and z
-  max_tvc_angle: [6.0, 6.0]
-  tvc_noise: 0.0
+  max_tvc_angle: [5.0, 5.0]
+  tvc_noise: 0.2
 
   tvc_servo_speed: 250
   tvc_linkage_ratio: 4

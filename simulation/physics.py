@@ -475,11 +475,12 @@ class physics_body:
     drag_force: vector3 = vector3()
     drag_area: float = 0.0
     drag_coefficient: float = 0.0
+    drag_coefficient_sideways: float = 0.0
 
     def __init__(self, position: vector3 = vector3(), velocity: vector3 = vector3(), acceleration: vector3 = vector3(), gravity: vector3 = vector3(),
                  mass: float = 0.0, moment_of_inertia: vector3 = vector3(), floor: bool = True, rotation: quaternion = quaternion(), rotational_velocity: vector3 = vector3(),
                  rotational_acceleration: vector3 = vector3(), acceleration_local: vector3() = vector3(), rotational_velocity_local: vector3() = vector3(), rotation_euler: vector3 = vector3(),
-                 wind: vector3 = vector3(), drag_force: vector3 = vector3(), drag_area_nose: float = 0.0, drag_area_sideways: float = 0.0, drag_coefficient: float = 0.0) -> None:
+                 wind: vector3 = vector3(), drag_force: vector3 = vector3(), drag_area_nose: float = 0.0, drag_area_sideways: float = 0.0, drag_coefficient: float = 0.0, drag_coefficient_sideways: float = 0.0) -> None:
         """Initialize the physics body."""
 
         self.position = position
@@ -501,6 +502,7 @@ class physics_body:
         self.drag_area_nose = drag_area_nose
         self.drag_area_sideways = drag_area_sideways
         self.drag_coefficient = drag_coefficient
+        self.drag_coefficient_sideways = drag_coefficient_sideways    
 
         self.aoa = 0.0
 
@@ -588,38 +590,34 @@ class physics_body:
             nf: vector3 = self.rotation.rotate(force)
             np: vector3 = self.rotation.rotate(point)
 
-            self.add_global_point_force(nf, point)
+            self.add_global_point_force(nf, np)
 
     def update_aero(self):
         """Updates aerodynamic forces acting on the body.
 
         Note - you still need to apply the drag force to the physics body with apply_glocal_point_force()."""
 
-        velocity_relative_wind: vector3 = self.velocity - self.wind_speed
+        velocity_relative_wind: vector3 = self.velocity - self.wind
 
-        if velocity_relative_wind.x != 0.0 and velocity_relative_wind.y != 0.0 and velocity_relative_wind.z != 0.0:
+        if velocity_relative_wind.norm() > 0.0:
 
             self.aoa = velocity_relative_wind.angle_between_vectors(
                 self.rotation.rotate(vector3(1.0, 0.0, 0.0)))
+
+            if self.aoa <= 1e-5:
+                self.aoa = 1e-5
 
             if (self.aoa > 1.5708):
                self.aoa = np.pi - self.aoa
 
             # print(self.aoa)
 
-            dc = self.drag_coefficient * self.aoa
+            # dc = self.drag_coefficient * self.aoa
 
-            if self.floor == True and self.position.x != 0.0:
-                self.drag_force: vector3 = -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
-                    (self.velocity.norm() ** 2) * dc * self.drag_area
+            dc = self.drag_coefficient + (0.5 * -np.cos(self.aoa*2) + 0.5) * (self.drag_coefficient_sideways - self.drag_coefficient)
 
-            elif self.floor == False:
-                self.drag_force: vector3= -velocity_relative_wind.normalize() * 0.5 * 1.225 * \
-                    (self.velocity.norm() ** 2) * dc * self.drag_area
-            
-            else:
-                self.drag_force: vector3 = vector3()
-            self.add_torque(self.rotational_velocity * -0.01)
+            if self.position.x != 0.0:
+                self.drag_force: vector3 = -velocity_relative_wind.normalize() * 0.5 * 1.225 * (self.velocity.norm() ** 2) * dc * self.drag_area
 
     def update(self, dt: float) -> None:
         """Updates the physics body"""
@@ -635,7 +633,6 @@ class physics_body:
         # verlet integration
         self.position += self.velocity * dt + ((self.acceleration/2.0) * (dt ** 2))
         self.velocity += self.acceleration * dt
-        
 
         self.rotational_velocity += self.rotational_acceleration * dt
 

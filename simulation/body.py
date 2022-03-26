@@ -25,7 +25,10 @@ class rocketBody:
         self.reaction_wheel_torque: float = 0.0
 
         self.rocket_motor: rocket_motor = rocket_motor(1000)
-        self.cp_locaoation: vector3 = vector3()
+        self.cp_location: vector3 = vector3()
+
+        self.max_wind_speed: float = 0.0
+
         self.dry_mass: float = 1.0
 
         self.tvc: TVC = TVC()
@@ -48,11 +51,19 @@ class rocketBody:
 
         self.tvc.calculate_forces(self.rocket_motor.current_thrust)
         self.body.add_force_local(self.tvc.force)
-        self.body.add_torque_local(vector3(0.0, self.tvc.force.y, self.tvc.force.z) * self.tvc_location.x)
+        self.body.add_torque_local(vector3(0.0, 0.0, 0.1))
+
+        print(self.tvc_location.cross(self.tvc.force))
         
-        self.body.update_aero()
+        # fucky scalar to make the wind go up and down sometimes
+        # self.body.wind = self.max_wind_speed * ((np.sin(self.time*np.cos(self.time))+ 1)/2) 
+
+        # self.body.update_aero()
+
+        # print(self.cp_location.cross(self.body.drag_force))
+
         self.body.add_force(self.body.drag_force)
-        self.body.add_torque(self.cp_locaoation.cross(self.body.drag_force))
+        self.body.add_torque(self.cp_location.cross(self.body.drag_force))
         self.body.add_torque(self.body.rotational_velocity * -0.001)
         self.body.update(self.time_step)
         
